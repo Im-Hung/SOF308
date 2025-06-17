@@ -8,6 +8,7 @@ import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Home from '../views/Home.vue'
 import Pagi from '../views/Pagination.vue'
+import Post from '../views/Post.vue'
 
 const routes = [
   {
@@ -20,6 +21,7 @@ const routes = [
       { path: 'discussion', component: Discussion },
       { path: 'about', component: About },
       { path: 'pagi', component: Pagi },
+      { path: 'post', component: Post },
     ],
   },
 

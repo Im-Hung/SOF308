@@ -6,12 +6,14 @@
     <div class="container mt-4">
       <div class="row">
         <!-- Left Column -->
-        <div class="col-lg-8">
+        <div class="container">
           <div class="post-card">
-            <div class="post-title">🚀 Viblo Mayfest 2025 | Công bố kết quả CHÍNH THỨC</div>
+            <div class="post-title">🚀 V-TEC Mayfest 2025 | Công bố kết quả CHÍNH THỨC</div>
             <div class="post-meta">
-              Viblo Team · 2 giờ trước · <span class="badge bg-primary">Announcement</span>
+              V-TEC Team · 2 giờ trước · <span class="badge bg-primary">Announcement</span>
             </div>
+            <br />
+            <a href="/post" class="btn btn-primary">Xem thêm</a>
           </div>
 
           <div class="post-card">
@@ -20,6 +22,8 @@
               EngineerPro · 5 giờ trước · <span class="badge bg-secondary">Tag1</span>
               <span class="badge bg-secondary">Career</span>
             </div>
+            <br />
+            <a href="#" class="btn btn-primary">Xem thêm</a>
           </div>
 
           <div class="post-card">
@@ -27,6 +31,8 @@
             <div class="post-meta">
               Minh Phạm · 7 giờ trước · <span class="badge bg-secondary">OAuth</span>
             </div>
+            <br />
+            <a href="#" class="btn btn-primary">Xem thêm</a>
           </div>
 
           <!-- Phân trang -->
@@ -44,44 +50,6 @@
         </div>
 
         <!-- Right Column -->
-        <div class="col-lg-4">
-          <div class="sidebar-box">
-            <h6 class="fw-bold mb-3">📌 Câu hỏi mới nhất</h6>
-            <p class="mb-1">Cách sử dụng ransackable_scopes trong ROR?</p>
-            <small class="text-muted">7 giờ trước · 10 lượt xem</small>
-            <hr />
-            <p class="mb-1">Chạy docker với nextjs app bị lỗi</p>
-            <small class="text-muted">3 giờ trước · 90 lượt xem</small>
-          </div>
-
-          <div class="sidebar-box">
-            <h6 class="fw-bold mb-3">🏆 Các tác giả hàng đầu</h6>
-
-            <div class="d-flex align-items-center mb-2">
-              <img src="https://i.pravatar.cc/36?img=1" class="author-img me-2" />
-              <div>
-                <div class="fw-bold">Minh Monem</div>
-                <small>4.6K 🌟 · 351.7K 👁️</small>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center mb-2">
-              <img src="https://i.pravatar.cc/36?img=2" class="author-img me-2" />
-              <div>
-                <div class="fw-bold">Viblo Algorithm</div>
-                <small>11.4K 🌟 · 1.8M 👁️</small>
-              </div>
-            </div>
-
-            <div class="d-flex align-items-center">
-              <img src="https://i.pravatar.cc/36?img=3" class="author-img me-2" />
-              <div>
-                <div class="fw-bold">Quang Binh Trương</div>
-                <small>136 🌟 · 1.0K 👁️</small>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

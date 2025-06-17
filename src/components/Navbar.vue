@@ -14,7 +14,7 @@
       </ul>
 
       <form class="d-flex me-3">
-        <input class="form-control" type="search" placeholder="Tìm kiếm trên Viblo" />
+        <input class="form-control" type="search" placeholder="Tìm kiếm trên V-TEC" />
       </form>
       <router-link to="/login" class="btn btn1 btn-outline-primary btn-sm">Đăng nhập</router-link>
       <router-link to="/register" class="btn btn-outline-primary btn-sm">Đăng ký</router-link>
