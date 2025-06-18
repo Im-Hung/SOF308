@@ -11,21 +11,21 @@
     <div class="d-flex align-items-center mb-2">
       <img src="https://i.pravatar.cc/36?img=1" class="author-img me-2" />
       <div>
-        <div class="fw-bold">Minh Monem</div>
+        <div class="fw-bold">Toan Luong</div>
         <small>4.6K 🌟 · 351.7K 👁️</small>
       </div>
     </div>
     <div class="d-flex align-items-center mb-2">
       <img src="https://i.pravatar.cc/36?img=2" class="author-img me-2" />
       <div>
-        <div class="fw-bold">Viblo Algorithm</div>
+        <div class="fw-bold">V-TEC DEV.</div>
         <small>11.4K 🌟 · 1.8M 👁️</small>
       </div>
     </div>
     <div class="d-flex align-items-center">
       <img src="https://i.pravatar.cc/36?img=3" class="author-img me-2" />
       <div>
-        <div class="fw-bold">Quang Binh Trương</div>
+        <div class="fw-bold">Johnny Dang</div>
         <small>136 🌟 · 1.0K 👁️</small>
       </div>
     </div>

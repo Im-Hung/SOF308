@@ -35,14 +35,15 @@
                 >
                   Follow
                 </button>
-                <button
+                <router-link
                   type="button"
                   data-mdb-button-init
                   data-mdb-ripple-init
                   class="btn btn-outline-primary ms-1"
+                  to="/editProfile"
                 >
                   Edit Profile
-                </button>
+                </router-link>
               </div>
             </div>
           </div>

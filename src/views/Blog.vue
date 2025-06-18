@@ -15,7 +15,7 @@
     </div>
     <div class="d-flex justify-content-between align-items-center">
       <h2 class="mb-0">Tạo bài viết mới</h2>
-      <a class="btn btn-info text-white" href="#">Đăng bài</a>
+      <router-link class="btn btn-info text-white" to="createPost">Đăng bài</router-link>
     </div>
   </div>
 </template>
