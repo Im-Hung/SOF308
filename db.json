@@ -17,12 +17,20 @@
       "createdAt": "2025-06-17T15:20:09.114Z"
     },
     {
-      "id": "eb04",
-      "title": "Tiêu đề bài viết",
-      "content": "<p><strong>Tiêu đề bài viết</strong></p>",
+      "id": "hmnu",
+      "title": "Quản lý bài viết",
+      "content": "<h2>Quản lý bài viếtQuản lý bài viếtQuản lý bài viết</h2>",
       "thumbnail": "",
-        "authorId": 2,
-      "createdAt": "2025-06-17T15:21:01.361Z"
+      "authorId": 2,
+      "createdAt": "2025-06-18T09:52:04.013Z"
+    },
+    {
+      "id": "fg6k",
+      "title": "Tạo bài viết mới",
+      "content": "<p>Tạo bài viết mới</p>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-18T10:04:53.370Z"
     }
   ],
   "users": [
