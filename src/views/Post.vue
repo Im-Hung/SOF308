@@ -4,6 +4,7 @@
       <h1 class="display-5 fw-bold text-primary">V-TEC MAYFEST 2025</h1>
       <h2 class="text-danger">CÔNG BỐ KẾT QUẢ CHÍNH THỨC</h2>
       <p class="text-muted">📅 Ngày đăng: 17/06/2025</p>
+      <p class="text-muted">👤 Tác giả: V-TEC Team</p>
     </div>
 
     <div class="mb-4">

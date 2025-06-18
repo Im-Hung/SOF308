@@ -4,7 +4,7 @@
     <div
       class="d-none d-md-flex col-md-6 align-items-center justify-content-center text-white image-section"
     >
-      <h1 class="fw-bold display-4 text-center px-4">Welcome to V-TEC</h1>
+      <h1 class="fw-bold display-4 text-center welcome px-4">Welcome to V-TEC</h1>
     </div>
 
     <!-- Right: Form Section (50%) -->
@@ -124,8 +124,15 @@ function loginWithGoogle() {
 </script>
 
 <style scoped>
+.welcome {
+  color: rgb(0, 110, 255);
+  border: 1px solid #ccc;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+  border-radius: 10px;
+}
 .image-section {
-  background-image: url('https://images.unsplash.com/reserve/LJIZlzHgQ7WPSh5KVTCB_Typewriter.jpg?q=80&w=1992&auto=format&fit=crop');
+  background-image: url('https://plus.unsplash.com/premium_photo-1681400704361-f675cdcde0f4?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');
   background-size: cover;
   background-position: center;
 }

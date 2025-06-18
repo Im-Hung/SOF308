@@ -9,7 +9,7 @@
       🎉 V-TEC May Fest đã khép lại. Cảm ơn các bạn đã đồng hành cùng chúng tôi trong sứ mệnh lan
       tỏa tri thức Việt!
     </div>
-    <div class="video-thumbnail">
+    <div class="video-thumbnail position-relative">
       <div class="center-box">
         <img
           src="https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
@@ -47,12 +47,10 @@
     <!-- Footer -->
     <Footer />
   </div>
-  <Header />
 </template>
 
 <script setup>
 // Tách các phần navbar, sidebar, footer ra component riêng cho sạch
-import Header from '../components/Header.vue'
 import Navbar from '../components/Navbar.vue'
 import Sidebar from '../components/Sidebar.vue'
 import Footer from '../components/Footer.vue'
@@ -80,10 +78,6 @@ import Footer from '../components/Footer.vue'
 .animated-border-box-glow {
   overflow: hidden;
   filter: blur(20px); /* 💫 Blur hiệu ứng glow */
-}
-.video-thumbnail {
-  z-index: 1;
-  position: relative;
 }
 
 .animated-border-box:before,
