@@ -6,7 +6,9 @@
         <div class="d-flex justify-content-between align-items-start mb-2">
           <div class="d-flex align-items-center">
             <strong class="me-2">{{ getAuthorName(comment.authorId) }}</strong>
-            <small class="text-muted">{{ formatDate(comment.createdAt) }}</small>
+            <small class="text-muted">{{
+              formatDate(comment.createdAt)
+            }}</small>
           </div>
 
           <!-- Comment Actions -->
@@ -15,7 +17,7 @@
               class="btn btn-sm btn-outline-secondary dropdown-toggle"
               data-bs-toggle="dropdown"
             >
-              <i class="fas fa-ellipsis-v"></i>
+              Xem thêm
             </button>
             <ul class="dropdown-menu">
               <li>
@@ -24,7 +26,7 @@
                   href="#"
                   @click.prevent="deleteComment"
                 >
-                  <i class="fas fa-trash me-2"></i>Xóa bình luận
+                  <i class="fas fa-trash-alt me-2"></i>Xóa bình luận
                 </a>
               </li>
             </ul>
@@ -37,7 +39,10 @@
         <!-- Comment Actions -->
         <div class="d-flex align-items-center gap-3">
           <!-- Like/Dislike -->
-          <div v-if="hasPermission(PERMISSIONS.LIKE_POSTS)" class="d-flex gap-2">
+          <div
+            v-if="hasPermission(PERMISSIONS.LIKE_POSTS)"
+            class="d-flex gap-2"
+          >
             <button
               @click="toggleReaction('like')"
               :class="`btn btn-sm ${userReaction === 'like' ? 'btn-primary' : 'btn-outline-primary'}`"
@@ -58,7 +63,7 @@
             @click="toggleReplyForm"
             class="btn btn-sm btn-outline-secondary"
           >
-            <i class="fas fa-reply me-1"></i>Trả lời
+            <i class="fas fa-comments me-1"></i>Trả lời
           </button>
         </div>
 
@@ -93,15 +98,19 @@
               <div class="card-body p-2">
                 <div class="d-flex justify-content-between align-items-start">
                   <div>
-                    <strong class="me-2">{{ getAuthorName(reply.authorId) }}</strong>
-                    <small class="text-muted">{{ formatDate(reply.createdAt) }}</small>
+                    <strong class="me-2">{{
+                      getAuthorName(reply.authorId)
+                    }}</strong>
+                    <small class="text-muted">{{
+                      formatDate(reply.createdAt)
+                    }}</small>
                   </div>
                   <div class="dropdown" v-if="canDeleteComment(reply)">
                     <button
                       class="btn btn-sm btn-outline-secondary dropdown-toggle"
                       data-bs-toggle="dropdown"
                     >
-                      <i class="fas fa-ellipsis-v"></i>
+                      <i class="fas fa-plus me-1"></i>Thêm
                     </button>
                     <ul class="dropdown-menu">
                       <li>
@@ -110,7 +119,7 @@
                           href="#"
                           @click.prevent="$emit('delete-comment', reply.id)"
                         >
-                          <i class="fas fa-trash me-2"></i>Xóa
+                          <i class="fas fa-trash-alt me-2"></i>Xóa
                         </a>
                       </li>
                     </ul>
@@ -127,51 +136,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useAuth } from '@/composables/auth';
+import { ref, computed } from "vue";
+import { useAuth } from "@/composables/auth";
 
 const { hasPermission, PERMISSIONS, currentUser, isAdmin } = useAuth();
 
 const props = defineProps({
   comment: {
     type: Object,
-    required: true
+    required: true,
   },
   post: {
     type: Object,
-    required: true
+    required: true,
   },
   replies: {
     type: Array,
-    default: () => []
+    default: () => [],
   },
   commentReactions: {
     type: Array,
-    default: () => []
-  }
+    default: () => [],
+  },
 });
 
-const emit = defineEmits(['delete-comment', 'submit-reply', 'toggle-reaction']);
+const emit = defineEmits(["delete-comment", "submit-reply", "toggle-reaction"]);
 
 const showReplyForm = ref(false);
-const replyContent = ref('');
+const replyContent = ref("");
 
 // Computed properties
 const likesCount = computed(() => {
   return props.commentReactions.filter(
-    r => r.commentId === props.comment.id && r.type === 'like'
+    (r) => r.commentId === props.comment.id && r.type === "like"
   ).length;
 });
 
 const dislikesCount = computed(() => {
   return props.commentReactions.filter(
-    r => r.commentId === props.comment.id && r.type === 'dislike'
+    (r) => r.commentId === props.comment.id && r.type === "dislike"
   ).length;
 });
 
 const userReaction = computed(() => {
   const reaction = props.commentReactions.find(
-    r => r.commentId === props.comment.id && r.userId === currentUser.value?.id
+    (r) =>
+      r.commentId === props.comment.id && r.userId === currentUser.value?.id
   );
   return reaction?.type || null;
 });
@@ -183,27 +193,27 @@ function toggleReplyForm() {
 
 function submitReply() {
   if (!replyContent.value?.trim()) return;
-  
+
   const replyData = {
     postId: props.post.id,
     content: replyContent.value,
-    parentId: props.comment.id
+    parentId: props.comment.id,
   };
-  
-  emit('submit-reply', replyData);
-  replyContent.value = '';
+
+  emit("submit-reply", replyData);
+  replyContent.value = "";
   showReplyForm.value = false;
 }
 
 function toggleReaction(type) {
-  emit('toggle-reaction', {
+  emit("toggle-reaction", {
     commentId: props.comment.id,
-    type: type
+    type: type,
   });
 }
 
 function deleteComment() {
-  emit('delete-comment', props.comment.id);
+  emit("delete-comment", props.comment.id);
 }
 
 function canDeleteComment(comment) {
@@ -214,8 +224,8 @@ function canDeleteComment(comment) {
 }
 
 function getAuthorName(authorId) {
-  const authors = { 1: 'Admin', 2: 'HungVu' };
-  return authors[authorId] || 'Unknown';
+  const authors = { 1: "Admin", 2: "HungVu" };
+  return authors[authorId] || "Unknown";
 }
 
 function formatDate(dateString) {
@@ -224,7 +234,7 @@ function formatDate(dateString) {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 </script>
@@ -245,7 +255,7 @@ function formatDate(dateString) {
 
 .dropdown-menu {
   border: none;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   border-radius: 8px;
 }
 

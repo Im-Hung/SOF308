@@ -181,6 +181,22 @@
       "authorId": 1,
       "content": "Bình luận hay!",
       "createdAt": "2025-06-19T10:30:00.000Z"
+    },
+    {
+      "id": "1750372127889",
+      "postId": "z6ic",
+      "authorId": "2",
+      "content": "Demo",
+      "parentId": null,
+      "createdAt": "2025-06-19T22:28:47.889Z"
+    },
+    {
+      "id": "1750372454614",
+      "postId": "z6ic",
+      "authorId": "2",
+      "content": "Demo1\n",
+      "parentId": "1750372127889",
+      "createdAt": "2025-06-19T22:34:14.614Z"
     }
   ],
   "users": [
