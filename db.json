@@ -49,29 +49,98 @@
       "commentCount": 0
     },
     {
-      "id": "pwn2",
-      "title": "Nội dung bài viết",
-      "content": "<p><strong>Nội dung bài viết</strong></p>",
-      "thumbnail": "",
-      "authorId": 2,
-      "createdAt": "2025-06-19T06:04:55.011Z"
-    },
-    {
       "id": "3ttl",
       "title": "Quản lý bài viết",
       "content": "<h2>Quản lý bài viết</h2>",
       "thumbnail": "",
       "authorId": 2,
       "createdAt": "2025-06-19T06:30:08.955Z"
+    },
+    {
+      "id": "ppj2",
+      "title": "Demo",
+      "content": "<p>Demo</p>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-19T19:53:56.266Z"
+    },
+    {
+      "id": "y6hk",
+      "title": "ava",
+      "content": "<p>ava</p>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-19T20:25:33.140Z"
     }
   ],
   "reactions": [
     {
-      "id": "1",
+      "id": "mc32rt6kiymq6",
       "postId": "c896",
-      "userId": 1,
+      "userId": "2",
       "type": "like",
-      "createdAt": "2025-06-19T10:00:00.000Z"
+      "createdAt": "2025-06-19T07:44:13.436Z",
+      "updatedAt": "2025-06-19T19:53:42.199Z"
+    },
+    {
+      "id": "mc32rynwvwi1n",
+      "postId": "3ttl",
+      "userId": "2",
+      "type": "like",
+      "createdAt": "2025-06-19T07:44:20.540Z",
+      "updatedAt": "2025-06-19T07:55:00.486Z"
+    },
+    {
+      "id": "mc32s1gzv3nl4",
+      "postId": "eb04",
+      "userId": "2",
+      "type": "like",
+      "createdAt": "2025-06-19T07:44:24.179Z",
+      "updatedAt": "2025-06-19T07:55:02.086Z"
+    },
+    {
+      "id": "mc335q52n5wvt",
+      "postId": "7eda",
+      "userId": "2",
+      "type": "like",
+      "createdAt": "2025-06-19T07:55:02.678Z"
+    },
+    {
+      "id": "mc335qrvgymcu",
+      "postId": "hmnu",
+      "userId": "2",
+      "type": "like",
+      "createdAt": "2025-06-19T07:55:03.499Z"
+    },
+    {
+      "id": "mc3t3aen8qsfj",
+      "postId": "ppj2",
+      "userId": "2",
+      "type": "dislike",
+      "createdAt": "2025-06-19T20:00:58.991Z"
+    },
+    {
+      "id": "mc3t71fd45a8f",
+      "postId": "ppj2",
+      "userId": "1",
+      "type": "like",
+      "createdAt": "2025-06-19T20:03:53.977Z",
+      "updatedAt": "2025-06-19T20:03:58.318Z"
+    },
+    {
+      "id": "mc3t799x7yhpc",
+      "postId": "c896",
+      "userId": "1",
+      "type": "like",
+      "createdAt": "2025-06-19T20:04:04.149Z"
+    },
+    {
+      "id": "mc3ublavt5n0d",
+      "postId": "y6hk",
+      "userId": "1",
+      "type": "like",
+      "createdAt": "2025-06-19T20:35:25.975Z",
+      "updatedAt": "2025-06-19T20:35:26.976Z"
     }
   ],
   "views": [

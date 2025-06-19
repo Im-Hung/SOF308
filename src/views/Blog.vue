@@ -3,25 +3,73 @@
     <!-- Header với Login/Logout -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
       <div class="container-fluid">
-        <span class="navbar-brand">📝 Blog System</span>
+        <span class="navbar-brand">📝 Quản lý bài viết</span>
         <div class="d-flex align-items-center">
           <div v-if="!isAuthenticated" class="d-flex gap-2">
             <button class="btn btn-outline-primary btn-sm" @click="showLoginModal = true">
-              <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập
+              <i class="fas fa-user me-1"></i>Đăng nhập
             </button>
           </div>
           <div v-else class="d-flex align-items-center gap-3">
             <span class="text-muted">{{ currentUser?.username }}</span>
-            <span :class="`badge ${isAdmin() ? 'bg-danger' : 'bg-secondary'}`">
-              {{ isAdmin() ? 'Admin' : 'User' }}
+            <span :class="`badge ${isAdmin.value ? 'bg-danger' : 'bg-secondary'}`">
+              {{ isAdmin.value ? 'Admin' : 'User' }}
             </span>
-            <button class="btn btn-outline-secondary btn-sm" @click="logout">
-              <i class="fas fa-sign-out-alt me-1"></i>Đăng xuất
+            <button class="btn btn-outline-secondary btn-sm" @click="handleLogout">
+              <i class="fas fa-user me-1"></i>Đăng xuất
             </button>
           </div>
         </div>
       </div>
     </nav>
+
+    <!-- Guest Notice -->
+    <div v-if="!isAuthenticated" class="alert alert-info mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <i class="fas fa-user me-1"></i>Đăng nhập
+          <strong>Chào mừng!</strong> Bạn đang xem ở chế độ khách. 
+          <strong>Đăng nhập</strong> để thích, bình luận và tạo bài viết.
+        </div>
+        <button class="btn btn-primary btn-sm" @click="showLoginModal = true">
+          Đăng nhập
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section mb-4">
+      <div class="row g-3">
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card text-center p-3">
+            <i class="fas fa-newspaper text-primary fs-2 mb-2"></i>
+            <h6 class="text-muted">Tổng bài viết</h6>
+            <h4 class="text-primary">{{ totalPosts }}</h4>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card text-center p-3">
+            <i class="fas fa-thumbs-up text-success fs-2 mb-2"></i>
+            <h6 class="text-muted">Lượt thích</h6>
+            <h4 class="text-success">{{ totalLikes }}</h4>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card text-center p-3">
+            <i class="fas fa-thumbs-down text-danger fs-2 mb-2"></i>
+            <h6 class="text-muted">Lượt không thích</h6>
+            <h4 class="text-danger">{{ totalDislikes }}</h4>
+          </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+          <div class="stat-card text-center p-3">
+            <i class="fas fa-comments text-warning fs-2 mb-2"></i>
+            <h6 class="text-muted">Bình luận</h6>
+            <h4 class="text-warning">{{ totalComments }}</h4>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Navigation Tabs -->
     <ul class="nav nav-pills nav-fill bg-light rounded p-2 mb-4">
@@ -49,7 +97,7 @@
           <i class="fas fa-plus me-2"></i>Tạo bài viết
         </button>
       </li>
-      <li v-if="isAdmin()" class="nav-item">
+      <li v-if="isAdmin.value" class="nav-item">
         <button 
           :class="`nav-link ${activeTab === 'admin' ? 'active' : ''}`"
           @click="setActiveTab('admin')"
@@ -68,6 +116,8 @@
           :show-all="true"
           @edit-post="handleEditPost"
           @reaction-updated="handleReactionUpdate"
+          @show-login="showLoginModal = true"
+          @view-post="handleViewPost"
         />
       </div>
 
@@ -90,7 +140,7 @@
       </div>
 
       <!-- Admin Panel Tab -->
-      <div v-if="activeTab === 'admin' && isAdmin()">
+      <div v-if="activeTab === 'admin' && isAdmin.value">
         <AdminPanel 
           :reload="reloadCounter"
           @content-updated="handleContentUpdate"
@@ -104,6 +154,14 @@
       @close="showLoginModal = false"
       @login-success="handleLoginSuccess"
     />
+
+    <!-- Post Detail Modal -->
+    <PostDetailModal 
+      v-if="showPostDetail"
+      :post="selectedPost"
+      @close="showPostDetail = false"
+      @show-login="showLoginModal = true"
+    />
   </div>
 </template>
 
@@ -115,6 +173,7 @@ import UserPosts from "@/components/UserPosts.vue";
 import AdminPanel from "@/components/AdminPanel.vue";
 import LoginModal from "@/components/LoginModal.vue";
 import { useAuth } from '@/composables/auth';
+import { useStats } from '@/composables/useStats';
 
 const { 
   currentUser, 
@@ -124,10 +183,20 @@ const {
   initializeAuth 
 } = useAuth();
 
+const {
+  totalPosts,
+  totalLikes,
+  totalDislikes,
+  totalComments,
+  fetchStats
+} = useStats();
+
 const activeTab = ref('all');
 const reloadCounter = ref(0);
 const editingPost = ref(null);
 const showLoginModal = ref(false);
+const showPostDetail = ref(false);
+const selectedPost = ref(null);
 
 function setActiveTab(tab) {
   activeTab.value = tab;
@@ -135,6 +204,10 @@ function setActiveTab(tab) {
 }
 
 function handleEditPost(post) {
+  if (!isAuthenticated.value) {
+    showLoginModal.value = true;
+    return;
+  }
   editingPost.value = post;
   activeTab.value = 'create';
 }
@@ -143,6 +216,7 @@ function handlePostSuccess() {
   reloadCounter.value++;
   editingPost.value = null;
   activeTab.value = 'all';
+  fetchStats(); // Refresh stats
 }
 
 function handleCancelEdit() {
@@ -151,20 +225,35 @@ function handleCancelEdit() {
 }
 
 function handleReactionUpdate() {
-  // Update stats if needed
+  fetchStats(); // Refresh stats when reactions change
 }
 
 function handleContentUpdate() {
   reloadCounter.value++;
+  fetchStats(); // Refresh stats
 }
 
 function handleLoginSuccess() {
   showLoginModal.value = false;
   reloadCounter.value++;
+  fetchStats(); // Refresh stats
+}
+
+function handleLogout() {
+  logout();
+  activeTab.value = 'all';
+  reloadCounter.value++;
+  fetchStats(); // Refresh stats
+}
+
+function handleViewPost(post) {
+  selectedPost.value = post;
+  showPostDetail.value = true;
 }
 
 onMounted(() => {
   initializeAuth();
+  fetchStats(); // Load initial stats
 });
 </script>
 
@@ -183,5 +272,51 @@ onMounted(() => {
 .nav-pills .nav-link.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+}
+
+.alert-info {
+  border-left: 4px solid #0d6efd;
+}
+
+/* Stats Section */
+.stats-section {
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #f1f3f4;
+  height: 100%;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-card h4 {
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.stat-card h6 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .stat-card h4 {
+    font-size: 1.5rem;
+  }
+  
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
 }
 </style>
