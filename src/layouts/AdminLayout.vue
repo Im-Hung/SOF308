@@ -9,35 +9,16 @@
       🎉 V-TEC May Fest đã khép lại. Cảm ơn các bạn đã đồng hành cùng chúng tôi trong sứ mệnh lan
       tỏa tri thức Việt!
     </div>
-    <div class="video-thumbnail position-relative">
-      <div class="center-box">
-        <img
-          src="https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1632&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt=""
-        />
-        <!-- START Box -->
-        <div class="animated-border-box-glow"></div>
-        <div class="animated-border-box">
-          <!-- Inside the Box -->
-
-          <div class="logo position-absolute top-50 start-50 translate-middle text-white">
-            <h1 class="mb-0 fw-bold logo-banner">V-TEC</h1>
-          </div>
-        </div>
-        <!-- END -->
-      </div>
-    </div>
 
     <!-- Main content + Sidebar -->
-    <div class="container mt-4">
+    <div class="">
       <div class="row">
         <!-- Main Content -->
-        <div class="col-md-8">
-          <router-view />
-          <!-- Chỗ các trang con sẽ hiển thị -->
+        <div class="col-md-2 bg-dark text-white min-vh-100 p-3">
+          <AdminSidebar @changeView="currentView = $event" />
         </div>
-        <div class="col-md-4">
-          <Sidebar />
+        <div class="col-md-10 mt-5">
+          <router-view />
         </div>
         <!-- Sidebar -->
         <!-- <Sidebar /> -->
@@ -52,8 +33,8 @@
 <script setup>
 // Tách các phần navbar, sidebar, footer ra component riêng cho sạch
 import Navbar from '../components/Navbar.vue'
-import Sidebar from '../components/Sidebar.vue'
 import Footer from '../components/Footer.vue'
+import AdminSidebar from '@/components/AdminSidebar.vue'
 </script>
 
 <style scoped>
