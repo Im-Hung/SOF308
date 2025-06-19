@@ -64,6 +64,14 @@
               ></div>
             </div>
             
+            <!-- Like/Dislike Component -->
+            <div class="mb-3">
+              <LikeDislike 
+                :post-id="post.id" 
+                @reaction-updated="handleReactionUpdate"
+              />
+            </div>
+            
             <!-- Footer -->
             <div class="card-footer bg-transparent border-0 px-0 pb-0">
               <div class="d-flex justify-content-between align-items-center mb-2">
@@ -96,7 +104,7 @@
                     <span v-if="deleting === post.id" class="spinner-border spinner-border-sm me-1"></span>
                     <i v-else class="fas fa-ellipsis-v"></i>
                   </button>
-                  <ul class="dropdown-menu" :aria-labelledby="`dropdownMenu${post.id}`">
+                  <ul class="dropdown-menu dropdown-menu-end" :aria-labelledby="`dropdownMenu${post.id}`">
                     <li>
                       <a class="dropdown-item" href="#" @click.prevent="viewPost(post)">
                         <i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết
@@ -126,13 +134,22 @@
 
 <script setup>
 import { ref, onMounted, watch } from "vue";
+import LikeDislike from "@/components/LikeDislike.vue";
 
 const posts = ref([]);
 const loading = ref(true);
 const error = ref("");
 const deleting = ref(null);
-const props = defineProps({ reload: Number });
-const emit = defineEmits(['view-comments', 'edit-post']);
+
+const props = defineProps({ 
+  reload: {
+    type: Number,
+    default: 0
+  }
+});
+
+// ✅ Thêm reaction-updated vào emit
+const emit = defineEmits(['view-comments', 'edit-post', 'view-post', 'reaction-updated']);
 
 async function fetchPosts() {
   loading.value = true;
@@ -159,6 +176,9 @@ async function deletePost(id) {
     if (!res.ok) throw new Error('Không thể xóa bài viết!');
     
     posts.value = posts.value.filter(post => post.id !== id);
+    
+    // ✅ Emit để cập nhật stats sau khi xóa
+    emit('reaction-updated');
   } catch (err) {
     error.value = err.message;
   }
@@ -171,11 +191,18 @@ function editPost(post) {
 
 function viewPost(post) {
   console.log('Viewing post:', post);
-  // Có thể mở modal hoặc chuyển trang chi tiết
+  // ✅ Emit view-post event để tăng view count
+  emit('view-post', post.id);
 }
 
 function viewComments(post) {
   emit('view-comments', post);
+}
+
+// ✅ Handle reaction updates từ LikeDislike component
+function handleReactionUpdate(data) {
+  console.log('Reaction updated:', data);
+  emit('reaction-updated', data);
 }
 
 onMounted(fetchPosts);
@@ -240,6 +267,7 @@ function truncateContent(content, maxLength = 150) {
   border: none;
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
   border-radius: 8px;
+  min-width: 160px;
 }
 
 .dropdown-item {
@@ -262,6 +290,15 @@ function truncateContent(content, maxLength = 150) {
   height: 3rem;
 }
 
+/* ✅ Styling cho LikeDislike component trong card */
+.card-body .like-dislike-container {
+  margin-top: 0;
+  padding: 0.75rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
 @media (max-width: 768px) {
   .col-lg-6 {
     margin-bottom: 1rem;
@@ -269,6 +306,10 @@ function truncateContent(content, maxLength = 150) {
   
   .d-flex.gap-2 {
     flex-direction: column;
+  }
+  
+  .like-dislike-container {
+    justify-content: center;
   }
 }
 </style>

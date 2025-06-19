@@ -22,12 +22,17 @@
       <i class="fas fa-info-circle me-1"></i>
       Đăng nhập để thích bài viết
     </div>
+    
+    <!-- Loading indicator -->
+    <div v-if="isLoading" class="spinner-border spinner-border-sm text-primary" role="status">
+      <span class="visually-hidden">Đang xử lý...</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-// import { useAuth } from '@/composables/auth';
+import { ref, onMounted } from 'vue';
+import { useAuth } from '@/composables/auth'; // ✅ Thêm import này
 
 const props = defineProps({
   postId: {
@@ -36,6 +41,10 @@ const props = defineProps({
   }
 });
 
+// Emit events để thông báo cho parent component
+const emit = defineEmits(['reaction-updated']);
+
+// ✅ Sử dụng useAuth composable (đã import)
 const { currentUser, isAuthenticated } = useAuth();
 
 const likesCount = ref(0);
@@ -53,25 +62,37 @@ onMounted(() => {
 async function fetchReactions() {
   try {
     const response = await fetch(`http://localhost:3001/reactions?postId=${props.postId}`);
+    if (!response.ok) throw new Error('Failed to fetch reactions');
+    
     const reactions = await response.json();
     
     likesCount.value = reactions.filter(r => r.type === 'like').length;
     dislikesCount.value = reactions.filter(r => r.type === 'dislike').length;
   } catch (error) {
     console.error('Error fetching reactions:', error);
+    // Set default values on error
+    likesCount.value = 0;
+    dislikesCount.value = 0;
   }
 }
 
 async function fetchUserReaction() {
+  if (!currentUser.value?.id) return;
+  
   try {
     const response = await fetch(`http://localhost:3001/reactions?postId=${props.postId}&userId=${currentUser.value.id}`);
+    if (!response.ok) throw new Error('Failed to fetch user reaction');
+    
     const reactions = await response.json();
     
     if (reactions.length > 0) {
       userReaction.value = reactions[0].type;
+    } else {
+      userReaction.value = null;
     }
   } catch (error) {
     console.error('Error fetching user reaction:', error);
+    userReaction.value = null;
   }
 }
 
@@ -94,6 +115,8 @@ async function handleDislike() {
 }
 
 async function toggleReaction(type) {
+  if (isLoading.value) return;
+  
   isLoading.value = true;
   
   try {
@@ -102,23 +125,25 @@ async function toggleReaction(type) {
       // Nếu click vào cùng loại reaction -> remove
       if (userReaction.value === type) {
         await removeReaction();
-        userReaction.value = null;
         
+        // Update local counts
         if (type === 'like') {
-          likesCount.value--;
+          likesCount.value = Math.max(0, likesCount.value - 1);
         } else {
-          dislikesCount.value--;
+          dislikesCount.value = Math.max(0, dislikesCount.value - 1);
         }
+        
+        userReaction.value = null;
       } else {
         // Nếu click vào reaction khác -> update
         await updateReaction(type);
         
         // Cập nhật count
         if (userReaction.value === 'like') {
-          likesCount.value--;
+          likesCount.value = Math.max(0, likesCount.value - 1);
           dislikesCount.value++;
         } else {
-          dislikesCount.value--;
+          dislikesCount.value = Math.max(0, dislikesCount.value - 1);
           likesCount.value++;
         }
         
@@ -135,9 +160,24 @@ async function toggleReaction(type) {
         dislikesCount.value++;
       }
     }
+    
+    // Emit event để thông báo cho parent component
+    emit('reaction-updated', {
+      postId: props.postId,
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+      userReaction: userReaction.value
+    });
+    
   } catch (error) {
     console.error('Error toggling reaction:', error);
     alert('Có lỗi xảy ra. Vui lòng thử lại.');
+    
+    // Refresh data on error
+    await fetchReactions();
+    if (isAuthenticated.value) {
+      await fetchUserReaction();
+    }
   }
   
   isLoading.value = false;
@@ -159,12 +199,17 @@ async function createReaction(type) {
   });
   
   if (!response.ok) {
-    throw new Error('Failed to create reaction');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to create reaction');
   }
+  
+  return await response.json();
 }
 
 async function updateReaction(type) {
   const response = await fetch(`http://localhost:3001/reactions?postId=${props.postId}&userId=${currentUser.value.id}`);
+  if (!response.ok) throw new Error('Failed to fetch existing reaction');
+  
   const reactions = await response.json();
   
   if (reactions.length > 0) {
@@ -172,17 +217,27 @@ async function updateReaction(type) {
     const updateResponse = await fetch(`http://localhost:3001/reactions/${reactionId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: type })
+      body: JSON.stringify({ 
+        type: type,
+        updatedAt: new Date().toISOString()
+      })
     });
     
     if (!updateResponse.ok) {
-      throw new Error('Failed to update reaction');
+      const errorData = await updateResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to update reaction');
     }
+    
+    return await updateResponse.json();
+  } else {
+    throw new Error('No existing reaction found to update');
   }
 }
 
 async function removeReaction() {
   const response = await fetch(`http://localhost:3001/reactions?postId=${props.postId}&userId=${currentUser.value.id}`);
+  if (!response.ok) throw new Error('Failed to fetch existing reaction');
+  
   const reactions = await response.json();
   
   if (reactions.length > 0) {
@@ -192,28 +247,121 @@ async function removeReaction() {
     });
     
     if (!deleteResponse.ok) {
-      throw new Error('Failed to remove reaction');
+      const errorData = await deleteResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to remove reaction');
     }
+  } else {
+    throw new Error('No existing reaction found to remove');
   }
 }
 
 function generateId() {
-  return Math.random().toString(36).substr(2, 9);
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
 }
+
+// Expose methods for parent component if needed
+defineExpose({
+  refreshReactions: () => {
+    fetchReactions();
+    if (isAuthenticated.value) {
+      fetchUserReaction();
+    }
+  }
+});
 </script>
 
 <style scoped>
 .like-dislike-container {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
+  min-height: 32px; /* Prevent layout shift */
+}
+
+.btn {
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .btn-sm {
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
+  min-width: 60px; /* Prevent button size change */
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  border: none;
+}
+
+.btn-outline-primary:hover {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.btn-outline-danger:hover {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+}
+
+.text-muted.small {
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Animation for count changes */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s, height 0.3s;
+}
+
+.btn:active::after {
+  width: 120px;
+  height: 120px;
+}
+
+@media (max-width: 768px) {
+  .like-dislike-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .btn-sm {
+    min-width: 50px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
 }
 </style>
