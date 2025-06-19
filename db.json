@@ -2,7 +2,7 @@
   "posts": [
     {
       "id": "c896",
-      "title": "Chia sẻ ý tưởng và kiến thức với cộng đồng",
+      "title": "Chia sẻ ý tưởng và kiến thức với cộng đồng Duong",
       "content": "<p>Chia sẻ ý tưởng và kiến thức với cộng đồng</p>",
       "thumbnail": "",
       "authorId": 2,
@@ -55,6 +55,14 @@
       "thumbnail": "",
       "authorId": 2,
       "createdAt": "2025-06-19T06:04:55.011Z"
+    },
+    {
+      "id": "3ttl",
+      "title": "Quản lý bài viết",
+      "content": "<h2>Quản lý bài viết</h2>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-19T06:30:08.955Z"
     }
   ],
   "reactions": [
