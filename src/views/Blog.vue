@@ -112,6 +112,20 @@ function toggleForm() {
       </div>
     </div>
   </div>
+  <div class="container mt-3 p-2">
+    <div class="post-card">
+      <div class="post-title">🚀 V-TEC Mayfest 2025 | Công bố kết quả CHÍNH THỨC</div>
+      <div class="post-meta">
+        V-TEC Team · 2 giờ trước · <span class="badge bg-primary">Announcement</span>
+      </div>
+      <br />
+      <a href="/post" class="btn btn-primary">Xem thêm</a>
+    </div>
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="mb-0">Tạo bài viết mới</h2>
+      <router-link class="btn btn-info text-white" to="createPost">Đăng bài</router-link>
+    </div>
+  </div>
 </template>
 
 <style scoped>
