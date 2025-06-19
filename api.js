@@ -10,7 +10,7 @@ const Comment_URL = `${BASE_URL}/comment`
 export async function Login(username, password) {
   // Sử dụng query params để tìm user
   const res = await axios.get(User_URL, {
-    params: { username, password },
+    params: { username, password }
   })
   // Nếu có user khớp, trả về true (logged in)
   return res.data.length > 0 ? res.data[0] : null
@@ -22,7 +22,7 @@ export function getAllUsers() {
 
 export function getUserByUsername(username) {
   return axios.get(User_URL, {
-    params: { username },
+    params: { username }
   })
 }
 
@@ -70,7 +70,7 @@ export function getCommentById(id) {
 
 export function getCommentsByBlogId(blogId) {
   return axios.get(Comment_URL, {
-    params: { blogId },
+    params: { blogId }
   })
 }
 

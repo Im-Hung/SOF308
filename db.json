@@ -2,27 +2,94 @@
   "posts": [
     {
       "id": "c896",
-      "title": "Đăng bài viết",
-      "content": "<h2>Đăng bài viết</h2>",
+      "title": "Chia sẻ ý tưởng và kiến thức với cộng đồng Duong",
+      "content": "<p>Chia sẻ ý tưởng và kiến thức với cộng đồng</p>",
       "thumbnail": "",
       "authorId": 2,
-      "createdAt": "2025-06-17T15:16:03.841Z"
+      "createdAt": "2025-06-19T12:55:00.000Z",
+      "viewCount": 0,
+      "likeCount": 0,
+      "dislikeCount": 0,
+      "commentCount": 0
     },
     {
       "id": "7eda",
-      "title": "Tiêu đề bài viết",
-      "content": "<p><strong>Tiêu đề bài viết</strong></p>",
+      "title": "Tạo bài viết mới",
+      "content": "<p>Tạo bài viết mới</p>",
       "thumbnail": "",
       "authorId": 2,
-      "createdAt": "2025-06-17T15:20:09.114Z"
+      "createdAt": "2025-06-18T17:04:00.000Z",
+      "viewCount": 0,
+      "likeCount": 0,
+      "dislikeCount": 0,
+      "commentCount": 0
     },
     {
       "id": "eb04",
-      "title": "Tiêu đề bài viết",
-      "content": "<p><strong>Tiêu đề bài viết</strong></p>",
+      "title": "Quản lý bài viết",
+      "content": "<p>Quản lý bài viết</p>",
       "thumbnail": "",
       "authorId": 2,
-      "createdAt": "2025-06-17T15:21:01.361Z"
+      "createdAt": "2025-06-18T16:52:00.000Z",
+      "viewCount": 0,
+      "likeCount": 0,
+      "dislikeCount": 0,
+      "commentCount": 0
+    },
+    {
+      "id": "hmnu",
+      "title": "Tiêu đề bài viết",
+      "content": "<p>Tiêu đề bài viết</p>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-17T22:20:00.000Z",
+      "viewCount": 0,
+      "likeCount": 0,
+      "dislikeCount": 0,
+      "commentCount": 0
+    },
+    {
+      "id": "pwn2",
+      "title": "Nội dung bài viết",
+      "content": "<p><strong>Nội dung bài viết</strong></p>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-19T06:04:55.011Z"
+    },
+    {
+      "id": "3ttl",
+      "title": "Quản lý bài viết",
+      "content": "<h2>Quản lý bài viết</h2>",
+      "thumbnail": "",
+      "authorId": 2,
+      "createdAt": "2025-06-19T06:30:08.955Z"
+    }
+  ],
+  "reactions": [
+    {
+      "id": "1",
+      "postId": "c896",
+      "userId": 1,
+      "type": "like",
+      "createdAt": "2025-06-19T10:00:00.000Z"
+    }
+  ],
+  "views": [
+    {
+      "id": "1",
+      "postId": "c896",
+      "userId": 1,
+      "ipAddress": "192.168.1.1",
+      "createdAt": "2025-06-19T10:00:00.000Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "1",
+      "postId": "c896",
+      "authorId": 1,
+      "content": "Bình luận hay!",
+      "createdAt": "2025-06-19T10:30:00.000Z"
     }
   ],
   "users": [
@@ -36,8 +103,5 @@
       "username": "hungvu",
       "role": "user"
     }
-  ],
-  "session": {
-    "userId": 2
-  }
+  ]
 }
