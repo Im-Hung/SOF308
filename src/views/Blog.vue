@@ -78,7 +78,7 @@
           :class="`nav-link ${activeTab === 'all' ? 'active' : ''}`"
           @click="setActiveTab('all')"
         >
-          <i class="fas fa-globe me-2"></i>Tất cả bài viết
+          <i class="fas fa-newspaper me-2"></i>Tất cả bài viết
         </button>
       </li>
       <li v-if="isAuthenticated" class="nav-item">
@@ -86,7 +86,7 @@
           :class="`nav-link ${activeTab === 'my-posts' ? 'active' : ''}`"
           @click="setActiveTab('my-posts')"
         >
-          <i class="fas fa-user-edit me-2"></i>Bài viết của tôi
+          <i class="fas fa-folder-open me-2"></i>Bài viết của tôi
         </button>
       </li>
       <li v-if="isAuthenticated" class="nav-item">
