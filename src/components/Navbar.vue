@@ -74,8 +74,8 @@
             <a class="dropdown-item text-danger" href="#" @click.prevent="logout">Đăng xuất</a>
           </li>
           <li>
-            <a class="dropdown-item text-danger" href="#" @click.prevent="logout"
-              >Chuyển sang Admin</a
+            <router-link class="dropdown-item text-danger" to="/admin"
+              >Chuyển sang Admin</router-link
             >
           </li>
         </ul>
