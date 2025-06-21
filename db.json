@@ -202,13 +202,37 @@
   "users": [
     {
       "id": "1",
-      "username": "admin",
-      "role": "admin"
+      "username": "john",
+      "password": "hashedpass",
+      "fullName": "V-TEC CORPORATION",
+      "email": "vtec@corporation.com",
+      "phone": "(+84) 125-680-7412",
+      "birthday": "1990-01-01",
+      "address": "Bien Hoa City, Dong Nai Province, Viet Nam",
+      "avatar": "https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp",
+      "roleId": 2
+    },
+    {
+      "id": "9523",
+      "username": "d",
+      "email": "d@gmail.com",
+      "password": "dddddd"
+    },
+    {
+      "id": "eeef",
+      "username": "a",
+      "email": "a@gmail.com",
+      "password": "aaaaaa"
+    }
+  ],
+  "roles": [
+    {
+      "id": "1",
+      "name": "admin"
     },
     {
       "id": "2",
-      "username": "hungvu",
-      "role": "user"
+      "name": "user"
     }
   ]
 }
