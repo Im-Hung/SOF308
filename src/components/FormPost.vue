@@ -317,7 +317,7 @@ async function uploadImages() {
         const formData = new FormData();
         formData.append("image", imageData.file);
 
-        const response = await fetch("http://localhost:3001/upload", {
+        const response = await fetch("http://localhost:3000/upload", {
           method: "POST",
           body: formData,
         });
@@ -388,8 +388,8 @@ const handleSubmit = async () => {
     }
 
     const url = isEditing.value
-      ? `http://localhost:3001/posts/${editingPostId.value}`
-      : "http://localhost:3001/posts";
+      ? `http://localhost:3000/posts/${editingPostId.value}`
+      : "http://localhost:3000/posts";
 
     const method = isEditing.value ? "PUT" : "POST";
 

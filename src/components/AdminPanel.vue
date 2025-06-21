@@ -142,8 +142,8 @@ const totalReports = ref(0);
 async function fetchAllData() {
   try {
     const [postsRes, commentsRes] = await Promise.all([
-      fetch('http://localhost:3001/posts'),
-      fetch('http://localhost:3001/comments')
+      fetch('http://localhost:3000/posts'),
+      fetch('http://localhost:3000/comments')
     ]);
     
     allPosts.value = await postsRes.json();
@@ -162,7 +162,7 @@ async function deletePost(id) {
   if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3001/posts/${id}`, {
+    const res = await fetch(`http://localhost:3000/posts/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -179,7 +179,7 @@ async function deleteComment(id) {
   if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3001/comments/${id}`, {
+    const res = await fetch(`http://localhost:3000/comments/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {

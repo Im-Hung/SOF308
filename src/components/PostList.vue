@@ -2,7 +2,7 @@
   <div class="container-fluid">
     <!-- Guest Notice -->
     <div v-if="!isAuthenticated" class="alert alert-info mb-4">
-      <i class="fas fa-info-circle me-2"></i>
+      <i class="fas fa-user me-1"></i>
       <strong>Chào mừng!</strong> Bạn đang xem ở chế độ khách. 
       <button class="btn btn-link p-0 ms-2" @click="$emit('show-login')">
         Đăng nhập
@@ -125,7 +125,6 @@
                 </div>
                 <div v-else class="mb-3">
                   <div class="text-muted small text-center p-2 bg-light rounded">
-                    <i class="fas fa-lock me-1"></i>
                     Đăng nhập để thích bài viết
                   </div>
                 </div>
@@ -276,7 +275,7 @@ async function fetchPosts() {
   loading.value = true;
   error.value = "";
   try {
-    const res = await fetch("http://localhost:3001/posts");
+    const res = await fetch("http://localhost:3000/posts");
     if (!res.ok) throw new Error("Không thể lấy danh sách bài viết!");
     const data = await res.json();
     posts.value = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -295,7 +294,7 @@ async function fetchPosts() {
 
 async function fetchComments() {
   try {
-    const res = await fetch('http://localhost:3001/comments');
+    const res = await fetch('http://localhost:3000/comments');
     comments.value = await res.json();
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -304,7 +303,7 @@ async function fetchComments() {
 
 async function fetchCommentReactions() {
   try {
-    const res = await fetch('http://localhost:3001/commentReactions');
+    const res = await fetch('http://localhost:3000/commentReactions');
     commentReactions.value = await res.json();
   } catch (err) {
     console.error('Error fetching comment reactions:', err);
@@ -316,7 +315,7 @@ async function deletePost(id) {
   
   deleting.value = id;
   try {
-    const res = await fetch(`http://localhost:3001/posts/${id}`, {
+    const res = await fetch(`http://localhost:3000/posts/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -395,7 +394,7 @@ async function handleSubmitComment(commentData) {
       createdAt: new Date().toISOString()
     };
 
-    const response = await fetch('http://localhost:3001/comments', {
+    const response = await fetch('http://localhost:3000/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(comment)
@@ -413,7 +412,7 @@ async function handleDeleteComment(commentId) {
   if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3001/comments/${commentId}`, {
+    const res = await fetch(`http://localhost:3000/comments/${commentId}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -436,13 +435,13 @@ async function handleToggleCommentReaction({ commentId, type }) {
 
     if (existingReaction) {
       if (existingReaction.type === type) {
-        await fetch(`http://localhost:3001/commentReactions/${existingReaction.id}`, {
+        await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
           method: 'DELETE'
         });
         commentReactions.value = commentReactions.value.filter(r => r.id !== existingReaction.id);
       } else {
         existingReaction.type = type;
-        await fetch(`http://localhost:3001/commentReactions/${existingReaction.id}`, {
+        await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type })
@@ -457,7 +456,7 @@ async function handleToggleCommentReaction({ commentId, type }) {
         createdAt: new Date().toISOString()
       };
 
-      await fetch('http://localhost:3001/commentReactions', {
+      await fetch('http://localhost:3000/commentReactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reaction)

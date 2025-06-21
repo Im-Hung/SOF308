@@ -80,7 +80,7 @@ onMounted(() => {
 
 async function fetchNotifications() {
   try {
-    const response = await fetch(`http://localhost:3001/notifications?userId=${currentUserId.value}&_sort=createdAt&_order=desc`);
+    const response = await fetch(`http://localhost:3000/notifications?userId=${currentUserId.value}&_sort=createdAt&_order=desc`);
     notifications.value = await response.json();
   } catch (error) {
     console.error('Error fetching notifications:', error);
@@ -89,7 +89,7 @@ async function fetchNotifications() {
 
 function setupRealTimeConnection() {
   // Sử dụng Server-Sent Events cho real-time notifications
-  eventSource = new EventSource(`http://localhost:3001/notifications/stream?userId=${currentUserId.value}`);
+  eventSource = new EventSource(`http://localhost:3000/notifications/stream?userId=${currentUserId.value}`);
   
   eventSource.onmessage = (event) => {
     const newNotification = JSON.parse(event.data);
@@ -127,7 +127,7 @@ function showToast(notification) {
 async function markAsRead(notification) {
   if (!notification.read) {
     try {
-      await fetch(`http://localhost:3001/notifications/${notification.id}`, {
+      await fetch(`http://localhost:3000/notifications/${notification.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ read: true })

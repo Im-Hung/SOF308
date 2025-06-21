@@ -153,7 +153,6 @@
       <h2 class="mb-0">Tạo bài viết mới</h2>
       <router-link class="btn btn-info text-white" to="createPost">Đăng bài</router-link>
     </div>
-<<<<<<< HEAD
 
     <!-- Login Modal -->
     <LoginModal 
@@ -327,11 +326,3 @@ onMounted(() => {
   }
 }
 </style>
-=======
-  </div>
-</template>
-
-<script setup></script>
-
-<style scoped></style>
->>>>>>> ac43e0f842a4b57f0173a841229a5aa56e6fa595
