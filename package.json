@@ -10,12 +10,12 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^44.3.0",
     "@ckeditor/ckeditor5-vue": "^7.3.0",
     "axios": "^1.10.0",
     "bootstrap": "^5.3.6",
     "bootstrap-vue": "^2.23.1",
     "chart.js": "^4.5.0",
-    "ckeditor5": "^45.2.0",
     "express": "^5.1.0",
     "multer": "^2.0.1",
     "tailwindcss": "^4.1.10",
