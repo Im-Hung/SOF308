@@ -1,227 +1,393 @@
 <template>
-  <div class="like-dislike-container">
-    <div class="d-flex gap-2">
-      <button 
-        @click="toggleReaction('like')" 
-        :class="['btn', 'btn-outline-success', 'btn-sm', { 'active': userReaction === 'like' }]"
-        :disabled="!authStore.isLoggedIn || loading"
-        :title="authStore.isLoggedIn ? 'Thích bài viết' : 'Đăng nhập để thích'"
-      >
-        <span v-if="loading && pendingType === 'like'" class="spinner-border spinner-border-sm me-1"></span>
-        <i v-else class="fas fa-thumbs-up me-1"></i>
-        {{ likesCount }}
-      </button>
-      
-      <button 
-        @click="toggleReaction('dislike')" 
-        :class="['btn', 'btn-outline-danger', 'btn-sm', { 'active': userReaction === 'dislike' }]"
-        :disabled="!authStore.isLoggedIn || loading"
-        :title="authStore.isLoggedIn ? 'Không thích bài viết' : 'Đăng nhập để đánh giá'"
-      >
-        <span v-if="loading && pendingType === 'dislike'" class="spinner-border spinner-border-sm me-1"></span>
-        <i v-else class="fas fa-thumbs-down me-1"></i>
-        {{ dislikesCount }}
-      </button>
-    </div>
-    
-    <div v-if="!authStore.isLoggedIn" class="text-muted small mt-1 text-center">
+  <div class="like-dislike-container d-flex align-items-center gap-2">
+    <button
+      @click="handleLike"
+      :disabled="!isAuthenticated || isLoading"
+      :class="`btn btn-sm ${userReaction === 'like' ? 'btn-primary' : 'btn-outline-primary'}`"
+    >
+      <i class="fas fa-thumbs-up me-1"></i>
+      Like {{ likesCount }}
+    </button>
+
+    <button
+      @click="handleDislike"
+      :disabled="!isAuthenticated || isLoading"
+      :class="`btn btn-sm ${userReaction === 'dislike' ? 'btn-danger' : 'btn-outline-danger'}`"
+    >
+      <i class="fas fa-thumbs-down me-1"></i>
+      Dislike {{ dislikesCount }}
+    </button>
+
+    <div v-if="!isAuthenticated" class="text-muted small">
+      <i class="fas fa-info-circle me-1"></i>
       Đăng nhập để thích bài viết
+    </div>
+
+    <!-- Loading indicator -->
+    <div
+      v-if="isLoading"
+      class="spinner-border spinner-border-sm text-primary"
+      role="status"
+    >
+      <span class="visually-hidden">Đang xử lý...</span>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { authStore } from "@/store/auth";
+import { ref, onMounted } from "vue";
+import { useAuth } from "@/composables/auth"; // ✅ Thêm import này
 
 const props = defineProps({
   postId: {
-    type: [String, Number],
+    type: String,
     required: true,
   },
 });
 
+// Emit events để thông báo cho parent component
 const emit = defineEmits(["reaction-updated"]);
 
-// Reactive state
+// ✅ Sử dụng useAuth composable (đã import)
+const { currentUser, isAuthenticated } = useAuth();
+
 const likesCount = ref(0);
 const dislikesCount = ref(0);
-const userReaction = ref(null);
-const loading = ref(false);
-const pendingType = ref(null);
+const userReaction = ref(null); // 'like', 'dislike', or null
+const isLoading = ref(false);
 
-// Computed properties
-const isAuthenticated = computed(() => authStore.isLoggedIn);
-const currentUser = computed(() => authStore.user);
-
-// Methods
-const toggleReaction = async (type) => {
-  if (!isAuthenticated.value) {
-    alert("Vui lòng đăng nhập để thích bài viết!");
-    return;
+onMounted(() => {
+  fetchReactions();
+  if (isAuthenticated.value) {
+    fetchUserReaction();
   }
+});
 
-  if (loading.value) return;
-
-  loading.value = true;
-  pendingType.value = type;
-
-  try {
-    const existingReaction = await checkUserReaction();
-
-    if (existingReaction) {
-      if (existingReaction.type === type) {
-        // Remove reaction
-        await removeReaction(existingReaction.id);
-        userReaction.value = null;
-      } else {
-        // Update reaction type
-        await updateReaction(existingReaction.id, type);
-        userReaction.value = type;
-      }
-    } else {
-      // Create new reaction
-      await createReaction(type);
-      userReaction.value = type;
-    }
-
-    await fetchReactions();
-    emit("reaction-updated");
-  } catch (error) {
-    console.error("Error toggling reaction:", error);
-    alert("Có lỗi xảy ra khi thực hiện hành động!");
-  } finally {
-    loading.value = false;
-    pendingType.value = null;
-  }
-};
-
-const checkUserReaction = async () => {
-  if (!isAuthenticated.value) return null;
-
+async function fetchReactions() {
   try {
     const response = await fetch(
-      `http://localhost:3000/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+      `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}`
     );
-    if (!response.ok) throw new Error("Failed to check reaction");
-    
-    const reactions = await response.json();
-    return reactions.length > 0 ? reactions[0] : null;
-  } catch (error) {
-    console.error("Error checking user reaction:", error);
-    return null;
-  }
-};
-
-const createReaction = async (type) => {
-  const reaction = {
-    id: Date.now().toString(),
-    postId: props.postId.toString(),
-    userId: currentUser.value.id.toString(),
-    type: type,
-    createdAt: new Date().toISOString(),
-  };
-
-  const response = await fetch("http://localhost:3000/reactions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(reaction),
-  });
-
-  if (!response.ok) throw new Error("Failed to create reaction");
-};
-
-const updateReaction = async (reactionId, type) => {
-  const response = await fetch(`http://localhost:3000/reactions/${reactionId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type, updatedAt: new Date().toISOString() }),
-  });
-
-  if (!response.ok) throw new Error("Failed to update reaction");
-};
-
-const removeReaction = async (reactionId) => {
-  const response = await fetch(`http://localhost:3000/reactions/${reactionId}`, {
-    method: "DELETE",
-  });
-
-  if (!response.ok) throw new Error("Failed to remove reaction");
-};
-
-const fetchReactions = async () => {
-  try {
-    const response = await fetch(`http://localhost:3000/reactions?postId=${props.postId}`);
     if (!response.ok) throw new Error("Failed to fetch reactions");
-    
+
     const reactions = await response.json();
 
     likesCount.value = reactions.filter((r) => r.type === "like").length;
     dislikesCount.value = reactions.filter((r) => r.type === "dislike").length;
-
-    // Check user's current reaction
-    if (isAuthenticated.value) {
-      const userReactionData = reactions.find(
-        (r) => r.userId === currentUser.value.id.toString()
-      );
-      userReaction.value = userReactionData ? userReactionData.type : null;
-    } else {
-      userReaction.value = null;
-    }
   } catch (error) {
     console.error("Error fetching reactions:", error);
     // Set default values on error
     likesCount.value = 0;
     dislikesCount.value = 0;
+  }
+}
+
+async function fetchUserReaction() {
+  if (!currentUser.value?.id) return;
+
+  try {
+    const response = await fetch(
+      `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+    );
+    if (!response.ok) throw new Error("Failed to fetch user reaction");
+
+    const reactions = await response.json();
+
+    if (reactions.length > 0) {
+      userReaction.value = reactions[0].type;
+    } else {
+      userReaction.value = null;
+    }
+  } catch (error) {
+    console.error("Error fetching user reaction:", error);
     userReaction.value = null;
   }
-};
+}
 
-// Lifecycle
-onMounted(() => {
-  fetchReactions();
+async function handleLike() {
+  if (!isAuthenticated.value) {
+    alert("Vui lòng đăng nhập để thích bài viết");
+    return;
+  }
+
+  await toggleReaction("like");
+}
+
+async function handleDislike() {
+  if (!isAuthenticated.value) {
+    alert("Vui lòng đăng nhập để không thích bài viết");
+    return;
+  }
+
+  await toggleReaction("dislike");
+}
+
+async function toggleReaction(type) {
+  if (isLoading.value) return;
+
+  isLoading.value = true;
+
+  try {
+    // Nếu user đã có reaction
+    if (userReaction.value) {
+      // Nếu click vào cùng loại reaction -> remove
+      if (userReaction.value === type) {
+        await removeReaction();
+
+        // Update local counts
+        if (type === "like") {
+          likesCount.value = Math.max(0, likesCount.value - 1);
+        } else {
+          dislikesCount.value = Math.max(0, dislikesCount.value - 1);
+        }
+
+        userReaction.value = null;
+      } else {
+        // Nếu click vào reaction khác -> update
+        await updateReaction(type);
+
+        // Cập nhật count
+        if (userReaction.value === "like") {
+          likesCount.value = Math.max(0, likesCount.value - 1);
+          dislikesCount.value++;
+        } else {
+          dislikesCount.value = Math.max(0, dislikesCount.value - 1);
+          likesCount.value++;
+        }
+
+        userReaction.value = type;
+      }
+    } else {
+      // Nếu user chưa có reaction -> tạo mới
+      await createReaction(type);
+      userReaction.value = type;
+
+      if (type === "like") {
+        likesCount.value++;
+      } else {
+        dislikesCount.value++;
+      }
+    }
+
+    // Emit event để thông báo cho parent component
+    emit("reaction-updated", {
+      postId: props.postId,
+      likesCount: likesCount.value,
+      dislikesCount: dislikesCount.value,
+      userReaction: userReaction.value,
+    });
+  } catch (error) {
+    console.error("Error toggling reaction:", error);
+    alert("Có lỗi xảy ra. Vui lòng thử lại.");
+
+    // Refresh data on error
+    await fetchReactions();
+    if (isAuthenticated.value) {
+      await fetchUserReaction();
+    }
+  }
+
+  isLoading.value = false;
+}
+
+async function createReaction(type) {
+  const reaction = {
+    id: generateId(),
+    postId: props.postId,
+    userId: currentUser.value.id,
+    type: type,
+    createdAt: new Date().toISOString(),
+  };
+
+  const response = await fetch("https://sof308-json-server-production.up.railway.app/reactions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reaction),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to create reaction");
+  }
+
+  return await response.json();
+}
+
+async function updateReaction(type) {
+  const response = await fetch(
+    `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+  );
+  if (!response.ok) throw new Error("Failed to fetch existing reaction");
+
+  const reactions = await response.json();
+
+  if (reactions.length > 0) {
+    const reactionId = reactions[0].id;
+    const updateResponse = await fetch(
+      `https://sof308-json-server-production.up.railway.app/reactions/${reactionId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: type,
+          updatedAt: new Date().toISOString(),
+        }),
+      }
+    );
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to update reaction");
+    }
+
+    return await updateResponse.json();
+  } else {
+    throw new Error("No existing reaction found to update");
+  }
+}
+
+async function removeReaction() {
+  const response = await fetch(
+    `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+  );
+  if (!response.ok) throw new Error("Failed to fetch existing reaction");
+
+  const reactions = await response.json();
+
+  if (reactions.length > 0) {
+    const reactionId = reactions[0].id;
+    const deleteResponse = await fetch(
+      `https://sof308-json-server-production.up.railway.app/reactions/${reactionId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!deleteResponse.ok) {
+      const errorData = await deleteResponse.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to remove reaction");
+    }
+  } else {
+    throw new Error("No existing reaction found to remove");
+  }
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+}
+
+// Expose methods for parent component if needed
+defineExpose({
+  refreshReactions: () => {
+    fetchReactions();
+    if (isAuthenticated.value) {
+      fetchUserReaction();
+    }
+  },
 });
 </script>
 
 <style scoped>
 .like-dislike-container {
-  padding: 10px 0;
+  margin-top: 0.5rem;
+  min-height: 32px; /* Prevent layout shift */
 }
 
-.btn.active {
-  background-color: var(--bs-primary);
-  color: white;
-  border-color: var(--bs-primary);
+.btn {
+  transition: all 0.3s ease;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
-.btn-outline-success.active {
-  background-color: #198754;
-  border-color: #198754;
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  min-width: 60px; /* Prevent button size change */
 }
 
-.btn-outline-danger.active {
-  background-color: #dc3545;
-  border-color: #dc3545;
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  border: none;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  border: none;
+}
+
+.btn-outline-primary:hover {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.btn-outline-danger:hover {
+  background: linear-gradient(135deg, #dc3545, #c82333);
 }
 
 .spinner-border-sm {
-  width: 0.875rem;
-  height: 0.875rem;
+  width: 1rem;
+  height: 1rem;
 }
 
-@media (max-width: 576px) {
-  .d-flex.gap-2 {
-    gap: 0.5rem !important;
+.text-muted.small {
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+/* Animation for count changes */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition:
+    width 0.3s,
+    height 0.3s;
+}
+
+.btn:active::after {
+  width: 120px;
+  height: 120px;
+}
+
+@media (max-width: 768px) {
+  .like-dislike-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
-  
+
   .btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.775rem;
+    min-width: 50px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
   }
 }
+
+.dropdown-toggle i {
+  font-family: "Font Awesome 6 Free" !important;
+  font-weight: 900 !important;
+  font-style: normal !important;
+}
+
 </style>

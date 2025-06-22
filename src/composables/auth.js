@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { Login as apiLogin } from '@/composables/api.js';
 
 const currentUser = ref(null);
 const isAuthenticated = ref(false);
@@ -89,21 +90,19 @@ export function useAuth() {
 
   async function login(credentials) {
     try {
-      // Simulate login - replace with real API
-      const userData = {
-        id: credentials.username === 'admin' ? "1" : "2",
-        username: credentials.username,
-        role: credentials.username === 'admin' ? ROLES.ADMIN : ROLES.USER,
-        email: `${credentials.username}@example.com`
-      };
-      
+      const userData = await apiLogin(credentials.emailOrUsername, credentials.password);
+
+      if (!userData) {
+        throw new Error('Sai tài khoản hoặc mật khẩu');
+      }
+
       currentUser.value = userData;
       isAuthenticated.value = true;
       isGuest.value = false;
-      
+
       localStorage.setItem('user', JSON.stringify(userData));
       localStorage.setItem('token', 'demo-token-' + Date.now());
-      
+
       return { success: true, user: userData };
     } catch (error) {
       console.error('Login error:', error);
@@ -122,7 +121,7 @@ export function useAuth() {
   function initializeAuth() {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
-    
+
     if (token && user) {
       try {
         currentUser.value = JSON.parse(user);

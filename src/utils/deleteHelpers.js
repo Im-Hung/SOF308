@@ -10,9 +10,9 @@
 const fetchAllRelatedData = async () => {
   try {
     const [reactionsRes, commentsRes, commentReactionsRes] = await Promise.all([
-      fetch('http://localhost:3000/reactions'),
-      fetch('http://localhost:3000/comments'),
-      fetch('http://localhost:3000/commentReactions')
+      fetch('https://sof308-json-server-production.up.railway.app/reactions'),
+      fetch('https://sof308-json-server-production.up.railway.app/comments'),
+      fetch('https://sof308-json-server-production.up.railway.app/commentReactions')
     ]);
 
     const [reactions, comments, commentReactions] = await Promise.all([
@@ -62,21 +62,21 @@ const executeDeleteOperations = async (postId, relatedData) => {
   // Tạo mảng tất cả các promise xóa
   const deletePromises = [
     // Xóa bài viết chính
-    fetch(`http://localhost:3000/posts/${postId}`, { method: 'DELETE' }),
+    fetch(`https://sof308-json-server-production.up.railway.app/posts/${postId}`, { method: 'DELETE' }),
     
     // Xóa tất cả reactions của bài viết
     ...relatedReactions.map(reaction => 
-      fetch(`http://localhost:3000/reactions/${reaction.id}`, { method: 'DELETE' })
+      fetch(`https://sof308-json-server-production.up.railway.app/reactions/${reaction.id}`, { method: 'DELETE' })
     ),
     
     // Xóa tất cả comment reactions
     ...relatedCommentReactions.map(commentReaction => 
-      fetch(`http://localhost:3000/commentReactions/${commentReaction.id}`, { method: 'DELETE' })
+      fetch(`https://sof308-json-server-production.up.railway.app/commentReactions/${commentReaction.id}`, { method: 'DELETE' })
     ),
     
     // Xóa tất cả comments (bao gồm cả replies)
     ...relatedComments.map(comment => 
-      fetch(`http://localhost:3000/comments/${comment.id}`, { method: 'DELETE' })
+      fetch(`https://sof308-json-server-production.up.railway.app/comments/${comment.id}`, { method: 'DELETE' })
     )
   ];
 
