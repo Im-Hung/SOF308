@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid">
-    <h4 class="mb-4"><i class="bi bi-person-gear me-2"></i>Bảng điều khiển Admin</h4>
+    <h4 class="mb-4"><i class="fas fa-shield-alt me-2"></i>Bảng điều khiển Admin</h4>
 
     <!-- Stats Cards -->
     <div class="row mb-4">
@@ -142,8 +142,8 @@ const totalReports = ref(0);
 async function fetchAllData() {
   try {
     const [postsRes, commentsRes] = await Promise.all([
-      fetch('http://localhost:3000/posts'),
-      fetch('http://localhost:3000/comments')
+      fetch('https://sof308-json-server-production.up.railway.app/posts'),
+      fetch('https://sof308-json-server-production.up.railway.app/comments')
     ]);
     
     allPosts.value = await postsRes.json();
@@ -162,7 +162,7 @@ async function deletePost(id) {
   if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3000/posts/${id}`, {
+    const res = await fetch(`https://sof308-json-server-production.up.railway.app/posts/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -179,7 +179,7 @@ async function deleteComment(id) {
   if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3000/comments/${id}`, {
+    const res = await fetch(`https://sof308-json-server-production.up.railway.app/comments/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {

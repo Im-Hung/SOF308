@@ -1,9 +1,7 @@
 <template>
   <div class="d-flex min-vh-100">
     <!-- Left: Image Section (50%) -->
-    <div
-      class="d-none d-md-flex col-md-6 align-items-center justify-content-center text-white image-section"
-    >
+    <div class="d-none d-md-flex col-md-6 align-items-center justify-content-center text-white image-section">
       <h1 class="fw-bold display-4 text-center px-4">Welcome to V-TEC</h1>
     </div>
 
@@ -11,56 +9,35 @@
     <div class="col-md-6 d-flex align-items-center justify-content-center bg-white p-4">
       <div class="w-100" style="max-width: 500px">
         <!-- Logo -->
-        <router-link
-          class="logo navbar-brand fs-2 fw-bold text-primary mb-4 text-center d-block"
-          to="/"
-        >
+        <router-link class="logo navbar-brand fs-2 fw-bold text-primary mb-4 text-center d-block" to="/">
           V-TEC
         </router-link>
 
         <!-- Tabs -->
         <div class="nav nav-pills nav-fill mb-4">
-          <button
-            class="nav-link"
-            :class="{ active: currentForm === 'login' }"
-            @click="currentForm = 'login'"
-          >
+          <button class="nav-link" :class="{ active: currentForm === 'login' }" @click="currentForm = 'login'">
             Login
           </button>
-          <button
-            class="nav-link"
-            :class="{ active: currentForm === 'signup' }"
-            @click="currentForm = 'signup'"
-          >
+          <button class="nav-link" :class="{ active: currentForm === 'signup' }" @click="currentForm = 'signup'">
             Signup
           </button>
-          <button
-            class="nav-link"
-            :class="{ active: currentForm === 'recovery' }"
-            @click="currentForm = 'recovery'"
-          >
+          <button class="nav-link" :class="{ active: currentForm === 'recovery' }" @click="currentForm = 'recovery'">
             Recover
           </button>
         </div>
 
         <!-- Login Form -->
-        <form v-if="currentForm === 'login'" @submit.prevent="showAlert('Login successful!')">
+        <form v-if="currentForm === 'login'" @submit.prevent="HandleLogin">
           <h3 class="mb-3 fw-bold">Login</h3>
           <div class="mb-3">
-            <input type="email" class="form-control" placeholder="Email" required />
+            <input v-model="emailOrUsername" type="text" class="form-control" placeholder="Nhập username hoặc email"
+              required>
           </div>
           <div class="mb-3 position-relative">
-            <input
-              :type="showPassword.login ? 'text' : 'password'"
-              class="form-control"
-              placeholder="Password"
-              required
-            />
-            <button
-              type="button"
-              class="btn btn-sm btn-light position-absolute top-0 end-0 mt-1 me-2"
-              @click="togglePassword('login')"
-            >
+            <input v-model="password" :type="showPassword.login ? 'text' : 'password'" class="form-control"
+              placeholder="Password" required />
+            <button type="button" class="btn btn-sm btn-light position-absolute top-0 end-0 mt-1 me-2"
+              @click="togglePassword('login')">
               👁️
             </button>
           </div>
@@ -71,22 +48,17 @@
         </form>
 
         <!-- Signup Form -->
-        <form v-if="currentForm === 'signup'" @submit.prevent="showAlert('Signup successful!')">
+        <form v-if="currentForm === 'signup'" @submit.prevent="HandleRegister">
           <h3 class="mb-3 fw-bold">Signup</h3>
           <div class="mb-3">
-            <input type="text" class="form-control" placeholder="Name" required />
+            <input v-model="username" type="text" class="form-control" placeholder="Username" required />
           </div>
           <div class="mb-3">
-            <input type="email" class="form-control" placeholder="Email" required />
+            <input v-model="email" type="email" class="form-control" placeholder="Email" required />
           </div>
           <div class="mb-3">
-            <input
-              type="password"
-              class="form-control"
-              placeholder="Password"
-              required
-              minlength="6"
-            />
+            <input v-model="password" type="password" class="form-control" placeholder="Password" required
+              minlength="6" />
           </div>
           <button type="submit" class="btn btn-success w-100">Signup</button>
         </form>
@@ -105,13 +77,46 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
+import { useRouter } from "vue-router";
+import { Register } from '@/composables/api';
+import { useAuth } from '@/composables/auth';
 
-const currentForm = ref('signup')
+const router = useRouter();
+const currentForm = ref('login')
 const showPassword = ref({ login: false })
+const username = ref('')
+const email = ref('')
+const password = ref('')
 
 function togglePassword(field) {
   showPassword.value[field] = !showPassword.value[field]
+}
+
+const emailOrUsername = ref('')
+const loading = ref(false)
+
+const { login } = useAuth();
+
+async function HandleLogin() {
+  loading.value = true;
+  try {
+    await login({ emailOrUsername: emailOrUsername.value, password: password.value });
+    router.push({ path: '/' })
+  } catch (error) {
+    alert(error.message || 'Đăng nhập thất bại');
+  }
+  loading.value = false;
+}
+
+const HandleRegister = async () => {
+  try {
+    await Register({ username: username.value, email: email.value, password: password.value })
+    showAlert('Đăng ký thành công!')
+    currentForm.value = 'login'
+  } catch (error) {
+    showAlert(error.message)
+  }
 }
 
 function showAlert(message) {

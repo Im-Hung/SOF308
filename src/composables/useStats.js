@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = 'https://sof308-json-server-production.up.railway.app';
 const Posts_URL = `${BASE_URL}/posts`;
 const Reactions_URL = `${BASE_URL}/reactions`;
 const Comments_URL = `${BASE_URL}/comments`;
