@@ -14,7 +14,7 @@
       <div class="row mb-3">
         <div class="col-sm-3"><label class="form-label">Full Name</label></div>
         <div class="col-sm-9">
-          <input v-model="form.fullName" type="text" class="form-control" />
+          <input v-model="form.fullName" type="text" class="form-control" required />
         </div>
       </div>
 
@@ -76,7 +76,7 @@
 <script setup>
 import { defineEmits, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../composables/api' // hoặc '@/api' nếu có jsconfig.json
+import api from '../composables/api'
 
 const router = useRouter()
 
@@ -88,19 +88,18 @@ const form = reactive({
   avatar: '',
   fullName: '',
   dob: '',
-  gender: '', 
+  gender: '',
   email: '',
   phone: '',
   address: '',
 })
 const emit = defineEmits(['save'])
 
-let userId = null
+const savedUser = JSON.parse(localStorage.getItem('user'));
+const userId = savedUser?.id;
 
 onMounted(async () => {
   try {
-    const sessionRes = await api.get('/session')
-    userId = 2
 
     const userRes = await api.get(`/users/${userId}`)
     Object.assign(form, userRes.data)

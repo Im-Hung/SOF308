@@ -12,8 +12,8 @@
           </div>
           <div v-else class="d-flex align-items-center gap-3">
             <span class="text-muted">{{ currentUser?.username }}</span>
-            <span :class="`badge ${isAdmin.value ? 'bg-danger' : 'bg-secondary'}`">
-              {{ isAdmin.value ? 'Admin' : 'User' }}
+            <span :class="`badge ${isAdmin() ? 'bg-danger' : 'bg-secondary'}`">
+              {{ isAdmin() ? 'Admin' : 'User' }}
             </span>
             <button class="btn btn-outline-secondary btn-sm" @click="handleLogout">
               <i class="fas fa-user me-1"></i>Đăng xuất

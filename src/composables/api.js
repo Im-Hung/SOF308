@@ -1,31 +1,46 @@
 // api.js
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'https://sof308-json-server-production.up.railway.app',
-})
+const BASE_URL = 'https://sof308-json-server-production.up.railway.app'
+const api = axios.create({ baseURL: BASE_URL })
 
 export default api
 
-const BASE_URL = 'https://sof308-json-server-production.up.railway.app'
 const User_URL = `${BASE_URL}/users`
 const Blog_URL = `${BASE_URL}/blogs`
 const Comment_URL = `${BASE_URL}/comment`
 
 // ---------- 🔐 USER / LOGIN ----------
-export async function Login(email, password) {
-  // Sử dụng query params để tìm user
-  const res = await api.get(User_URL, {
-    params: { username, password }
-  })
-  // Nếu có user khớp, trả về true (logged in)
-  return res.data.length > 0 ? res.data[0] : null
+export async function Login(emailOrUsername, password) {
+  const res = await api.get('/users', {
+    params: { q: emailOrUsername }
+  });
+
+  // Kiểm tra nếu không có dữ liệu trả về hoặc không phải mảng
+  const users = Array.isArray(res.data) ? res.data : [];
+
+  const user = res.data.find(
+    u =>
+      (u.username === emailOrUsername || u.email === emailOrUsername) &&
+      u.password === password
+  );
+
+  if (!user) return null;
+
+  // Lấy role name từ bảng roles
+  const roleRes = await api.get(`/roles/${user.roleId}`);
+  const roleName = roleRes.data?.name || 'user';
+
+  return {
+    ...user,
+    role: roleName
+  };
 }
 
 // Đăng ký tài khoản mới
 export async function Register({ username, email, password }) {
   // Kiểm tra xem username hoặc email đã tồn tại chưa
-  const existing = await axios.get(User_URL, {
+  const existing = await api.get(User_URL, {
     params: { email }
   })
 
@@ -34,7 +49,7 @@ export async function Register({ username, email, password }) {
   }
 
   // Nếu chưa tồn tại, thêm mới
-  const res = await axios.post(User_URL, {
+  const res = await api.post(User_URL, {
     username,
     email,
     password,

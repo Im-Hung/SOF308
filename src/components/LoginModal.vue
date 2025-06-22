@@ -10,23 +10,12 @@
           <form @submit.prevent="handleLogin">
             <div class="mb-3">
               <label class="form-label">Tên đăng nhập</label>
-              <input 
-                v-model="username" 
-                type="text" 
-                class="form-control" 
-                placeholder="Nhập username (admin hoặc user)"
-                required
-              >
+              <input v-model="emailOrUsername" type="text" class="form-control" placeholder="Nhập username hoặc email"
+                required>
             </div>
             <div class="mb-3">
               <label class="form-label">Mật khẩu</label>
-              <input 
-                v-model="password" 
-                type="password" 
-                class="form-control" 
-                placeholder="Nhập mật khẩu"
-                required
-              >
+              <input v-model="password" type="password" class="form-control" placeholder="Nhập mật khẩu" required>
             </div>
             <div class="text-muted small mb-3">
               <strong>Demo accounts:</strong><br>
@@ -52,14 +41,14 @@ const emit = defineEmits(['close', 'login-success']);
 
 const { login } = useAuth();
 
-const username = ref('');
+const emailOrUsername = ref('');
 const password = ref('');
 const loading = ref(false);
 
 async function handleLogin() {
   loading.value = true;
   try {
-    await login({ username: username.value, password: password.value });
+    await login({ emailOrUsername: emailOrUsername.value, password: password.value });
     emit('login-success');
   } catch (error) {
     alert('Đăng nhập thất bại!');

@@ -30,7 +30,8 @@
         <form v-if="currentForm === 'login'" @submit.prevent="HandleLogin">
           <h3 class="mb-3 fw-bold">Login</h3>
           <div class="mb-3">
-            <input v-model="email" type="email" class="form-control" placeholder="Email" required />
+            <input v-model="emailOrUsername" type="text" class="form-control" placeholder="Nhập username hoặc email"
+              required>
           </div>
           <div class="mb-3 position-relative">
             <input v-model="password" :type="showPassword.login ? 'text' : 'password'" class="form-control"
@@ -50,7 +51,7 @@
         <form v-if="currentForm === 'signup'" @submit.prevent="HandleRegister">
           <h3 class="mb-3 fw-bold">Signup</h3>
           <div class="mb-3">
-            <input v-model="name" type="text" class="form-control" placeholder="Name" required />
+            <input v-model="username" type="text" class="form-control" placeholder="Username" required />
           </div>
           <div class="mb-3">
             <input v-model="email" type="email" class="form-control" placeholder="Email" required />
@@ -76,14 +77,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 import { useRouter } from "vue-router";
-import { Login, Register } from '@/composables/api'
+import { Register } from '@/composables/api';
+import { useAuth } from '@/composables/auth';
 
 const router = useRouter();
 const currentForm = ref('login')
 const showPassword = ref({ login: false })
-const name = ref('')
+const username = ref('')
 const email = ref('')
 const password = ref('')
 
@@ -91,23 +93,25 @@ function togglePassword(field) {
   showPassword.value[field] = !showPassword.value[field]
 }
 
-const HandleLogin = async () => {
+const emailOrUsername = ref('')
+const loading = ref(false)
+
+const { login } = useAuth();
+
+async function HandleLogin() {
+  loading.value = true;
   try {
-    const user = await Login(email.value, password.value)
-    showAlert('Login thành công!')
-    if (user.roleId === 1) {
-      router.push({ path: '/' })
-    } else {
-      router.push({ path: '/' })
-    }
+    await login({ emailOrUsername: emailOrUsername.value, password: password.value });
+    router.push({ path: '/' })
   } catch (error) {
-    showAlert(error.message || 'Đăng nhập thất bại')
+    alert(error.message || 'Đăng nhập thất bại');
   }
+  loading.value = false;
 }
 
 const HandleRegister = async () => {
   try {
-    await Register({ username: name.value, email: email.value, password: password.value })
+    await Register({ username: username.value, email: email.value, password: password.value })
     showAlert('Đăng ký thành công!')
     currentForm.value = 'login'
   } catch (error) {

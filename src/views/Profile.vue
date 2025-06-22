@@ -16,11 +16,10 @@
         <div class="col-lg-4">
           <div class="card mb-4">
             <div class="card-body text-center">
-              <img src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava3.webp" alt="avatar"
-                class="rounded-circle img-fluid" style="width: 150px" />
-              <h5 class="my-3">V-TEC Corp.</h5>
+              <img :src="form.avatar" alt="avatar" class="rounded-circle img-fluid" style="width: 150px" />
+              <h5 class="my-3">{{ form.fullName }}</h5>
               <p class="text-muted mb-1">Full Stack Developer</p>
-              <p class="text-muted mb-4">Bien Hoa, Dong Nai, VN</p>
+              <p class="text-muted mb-4">{{ form.address }}</p>
               <div class="d-flex justify-content-center mb-2">
                 <button type="button" data-mdb-button-init data-mdb-ripple-init class="btn btn-primary">
                   Follow
@@ -182,6 +181,7 @@ import { reactive, ref, onMounted } from 'vue'
 import api from '@/composables/api'
 
 const form = reactive({
+  avatar: '',
   fullName: '',
   dob: '',
   gender: '',
@@ -195,8 +195,9 @@ let userId = null
 
 onMounted(async () => {
   try {
-    const session = await api.get('/session')
-    userId = 2
+    const savedUser = JSON.parse(localStorage.getItem('user'));
+    const userId = savedUser?.id;
+    
     const userRes = await api.get(`/users/${userId}`)
     Object.assign(form, userRes.data)
   } catch (err) {
@@ -209,8 +210,8 @@ onMounted(async () => {
 function genderLabel(val) {
   return val === 'male' ? 'Male'
     : val === 'female' ? 'Female'
-    : val === 'other' ? 'Other'
-    : ''
+      : val === 'other' ? 'Other'
+        : ''
 }
 
 function formatDate(val) {
