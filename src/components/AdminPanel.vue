@@ -1,6 +1,6 @@
 <template>
   <div class="container-fluid">
-    <h4 class="mb-4"><i class="fas fa-shield-alt me-2"></i>Bảng điều khiển Admin</h4>
+    <h4 class="mb-4"><i class="bi bi-person-gear me-2"></i>Bảng điều khiển Admin</h4>
 
     <!-- Stats Cards -->
     <div class="row mb-4">

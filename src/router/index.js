@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { authStore } from '@/store/auth'
 import MainLayout from '../layouts/MainLayout.vue'
 import SideLayout from '../layouts/SideLayout.vue'
 import PersonalLayout from '../layouts/PersonalLayout.vue'
@@ -19,7 +20,7 @@ import About from '../views/About.vue'
 import Login from '../views/Login.vue'
 import Register from '../views/Register.vue'
 import Pagi from '../views/Pagination.vue'
-import Post from '../views/Post.vue'
+import FormPost from '@/components/FormPost.vue'
 import Profile from '../views/Profile.vue'
 import EditProfile from '../views/EditProfile.vue'
 
@@ -28,7 +29,7 @@ const routes = [
     path: '/',
     component: MainLayout,
     children: [
-      { path: '', component: Home }, // 👈 Trang mặc định là Home
+      { path: '', component: Home },
     ],
   },
   {
@@ -46,20 +47,25 @@ const routes = [
   {
     path: '/',
     component: PersonalLayout,
+    meta: { requiresAuth: true },
     children: [
       { path: 'profile', component: Profile },
-      { path: 'post', component: Post },
+      { 
+        path: 'FormPost', 
+        component: FormPost,
+        meta: { requiresAuth: true, roles: ['admin', 'user'] }
+      },
       { path: 'editProfile', component: EditProfile },
     ],
   },
   {
     path: '/admin',
     component: AdminLayout,
+    meta: { requiresAuth: true, roles: ['admin'] },
     children: [
       { path: '', component: Dashboard },
-      { path: '', redirect: '/admin/users' }, // nếu không có gì thì về users
       { path: 'users', component: ManageUsers },
-      { path: 'posts', component: ManagePosts },
+      { path: 'posts', component: FormPost },
       { path: 'comments', component: ManageComments },
       { path: 'qna', component: ManageQnA },
     ],
@@ -72,6 +78,36 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+})
+
+// Navigation guard
+router.beforeEach((to, from, next) => {
+  // Kiểm tra xem route có yêu cầu đăng nhập không
+  if (to.meta.requiresAuth) {
+    if (!authStore.isLoggedIn) {
+      // Chưa đăng nhập, chuyển về login với redirect
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      })
+      return
+    }
+    
+    // Kiểm tra role nếu có yêu cầu
+    if (to.meta.roles && !to.meta.roles.includes(authStore.userRole)) {
+      alert('Bạn không có quyền truy cập trang này!')
+      next('/')
+      return
+    }
+  }
+  
+  // Nếu đã đăng nhập và truy cập login page, redirect về home
+  if (to.path === '/login' && authStore.isLoggedIn) {
+    next('/')
+    return
+  }
+  
+  next()
 })
 
 export default router

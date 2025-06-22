@@ -1,12 +1,14 @@
 <template>
-  <div class="container-fluid">
+  <div class="posts-container">
     <!-- Guest Notice -->
-    <div v-if="!isAuthenticated" class="alert alert-info mb-4">
-      <i class="fas fa-user me-1"></i>
-      <strong>Chào mừng!</strong> Bạn đang xem ở chế độ khách. 
-      <button class="btn btn-link p-0 ms-2" @click="$emit('show-login')">
-        Đăng nhập
-      </button> để thích, bình luận và tạo bài viết.
+    <div v-if="!authStore.isLoggedIn" class="alert alert-info mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <i class="fas fa-user me-1"></i>
+          <strong>Chào mừng!</strong> Bạn đang xem ở chế độ khách. 
+          <strong>Đăng nhập</strong> để thích, bình luận và tạo bài viết.
+        </div>
+      </div>
     </div>
 
     <!-- Loading State -->
@@ -24,12 +26,19 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="posts.length === 0" class="text-center py-5">
+    <div v-else-if="filteredPosts.length === 0" class="text-center py-5">
       <div class="card border-0">
         <div class="card-body">
-          <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-          <h5 class="text-muted">Chưa có bài viết nào</h5>
-          <p class="text-muted">Hãy tạo bài viết đầu tiên của bạn!</p>
+          <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+          <h5 class="text-muted">{{ getEmptyStateTitle() }}</h5>
+          <p class="text-muted">{{ getEmptyStateMessage() }}</p>
+          <button 
+            v-if="authStore.isLoggedIn && (authStore.userRole === 'admin' || authStore.userRole === 'user')"
+            @click="$emit('create-post')"
+            class="btn btn-primary"
+          >
+            <i class="fas fa-plus me-2"></i>Tạo bài viết đầu tiên
+          </button>
         </div>
       </div>
     </div>
@@ -37,7 +46,7 @@
     <!-- Posts List -->
     <div v-else class="row">
       <div 
-        v-for="post in posts" 
+        v-for="post in filteredPosts" 
         :key="post.id" 
         class="col-12 mb-4"
       >
@@ -111,23 +120,19 @@
                   </small>
                   <small class="text-muted">
                     <i class="fas fa-clock me-1"></i>{{ formatDate(post.createdAt) }}
+                    <span v-if="post.updatedAt && post.updatedAt !== post.createdAt" class="ms-2">
+                      <i class="fas fa-edit me-1"></i>Đã sửa
+                    </span>
                   </small>
                 </div>
               </div>
               
               <div class="col-md-4">
-                <!-- Like/Dislike -->
-                <div v-if="hasPermission(PERMISSIONS.LIKE_POSTS)" class="mb-3">
-                  <LikeDislike 
-                    :post-id="post.id" 
-                    @reaction-updated="$emit('reaction-updated')"
-                  />
-                </div>
-                <div v-else class="mb-3">
-                  <div class="text-muted small text-center p-2 bg-light rounded">
-                    Đăng nhập để thích bài viết
-                  </div>
-                </div>
+                <!-- Like/Dislike Component -->
+                <LikeDislike 
+                  :post-id="post.id" 
+                  @reaction-updated="handleReactionUpdated"
+                />
                 
                 <!-- Action Buttons -->
                 <div class="d-flex gap-2 mb-3">
@@ -136,14 +141,14 @@
                   </button>
                   
                   <!-- Edit/Delete for authorized users -->
-                  <div v-if="isAuthenticated && (canEditPost(post) || canDeletePost(post))" class="dropdown">
+                  <div v-if="authStore.isLoggedIn && (canEditPost(post) || canDeletePost(post))" class="dropdown">
                     <button 
                       class="btn btn-outline-secondary btn-sm dropdown-toggle" 
                       type="button" 
                       :id="`dropdownMenu${post.id}`"
                       data-bs-toggle="dropdown"
                     >
-                      <i class="fas fa-ellipsis-v"></i>
+                      <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
                       <li v-if="canEditPost(post)">
@@ -153,11 +158,24 @@
                       </li>
                       <li v-if="canDeletePost(post)">
                         <a class="dropdown-item text-danger" href="#" @click.prevent="deletePost(post.id)">
-                          <i class="fas fa-trash me-2"></i>Xóa
+                          <i class="fas fa-trash-alt me-2"></i>Xóa
                         </a>
                       </li>
                     </ul>
                   </div>
+                </div>
+
+                <!-- Post Stats -->
+                <div class="d-flex gap-2 flex-wrap">
+                  <span class="badge bg-success">
+                    <i class="fas fa-thumbs-up me-1"></i>{{ getPostLikes(post.id) }}
+                  </span>
+                  <span class="badge bg-danger">
+                    <i class="fas fa-thumbs-down me-1"></i>{{ getPostDislikes(post.id) }}
+                  </span>
+                  <span class="badge bg-info">
+                    <i class="fas fa-comments me-1"></i>{{ getPostComments(post.id).length }}
+                  </span>
                 </div>
               </div>
             </div>
@@ -218,177 +236,409 @@
         </div>
       </div>
     </div>
-
-    <!-- Post Detail Modal -->
-    <PostDetailModal 
-      v-if="showPostDetail"
-      :post="selectedPost"
-      @close="showPostDetail = false"
-      @show-login="$emit('show-login')"
-    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, reactive } from "vue";
+import { ref, onMounted, watch, reactive, computed } from "vue";
+import { authStore } from "@/store/auth";
 import LikeDislike from "@/components/LikeDislike.vue";
 import CommentsSection from "@/components/CommentsSection.vue";
-import { useAuth } from '@/composables/auth';
-
-const { 
-  isAuthenticated,
-  hasPermission, 
-  canEditPost, 
-  canDeletePost, 
-  PERMISSIONS,
-  currentUser,
-} = useAuth();
+// Import các hàm tiện ích xóa cascade
+import { deleteCascade, updateLocalStateAfterDelete } from '@/utils/deleteHelpers';
 
 const props = defineProps({
-  reload: Number,
+  reload: {
+    type: Number,
+    default: 0
+  },
   showAll: {
     type: Boolean,
     default: true
+  },
+  filterUserId: {
+    type: [String, Number],
+    default: null
+  },
+  activeTab: {
+    type: String,
+    default: 'all'
   }
 });
 
-const emit = defineEmits(['edit-post', 'reaction-updated', 'show-login']);
+const emit = defineEmits([
+  'edit-post', 
+  'reaction-updated', 
+  'show-login',
+  'create-post',
+  'view-post',
+  'posts-loaded',
+  'stats-updated'
+]);
 
+// Local state - Trạng thái cục bộ
 const posts = ref([]);
+const reactions = ref([]);
 const comments = ref([]);
 const commentReactions = ref([]);
 const loading = ref(false);
 const error = ref("");
-const deleting = ref(null);
-const showPostDetail = ref(false);
-const selectedPost = ref(null);
+const users = ref([]); // Thêm để lưu thông tin users
 
-// Image modal state
+// Image modal state - Trạng thái modal hình ảnh
 const showImageModal = ref(false);
 const modalImages = ref([]);
 const currentModalIndex = ref(0);
 
-// Track current image index for each post
+// Theo dõi index ảnh hiện tại cho mỗi post
 const postImageIndexes = reactive({});
 
-async function fetchPosts() {
+// Computed properties - Các thuộc tính được tính toán
+const filteredPosts = computed(() => {
+  let filtered = posts.value;
+  
+  // Lọc theo user nếu được chỉ định
+  if (props.filterUserId) {
+    filtered = filtered.filter(post => post.authorId === props.filterUserId);
+  }
+  
+  // Lọc theo tab active
+  if (props.activeTab === 'my' && authStore.isLoggedIn) {
+    filtered = filtered.filter(post => post.authorId === authStore.user.id);
+  }
+  
+  return filtered;
+});
+
+// Computed cho stats để emit real-time
+const totalStats = computed(() => {
+  return {
+    totalPosts: posts.value.length,
+    totalLikes: reactions.value.filter(r => r.type === 'like').length,
+    totalDislikes: reactions.value.filter(r => r.type === 'dislike').length,
+    totalComments: comments.value.length
+  };
+});
+
+// Watch để emit stats khi data thay đổi
+watch([posts, reactions, comments], () => {
+  emit('stats-updated', totalStats.value);
+}, { deep: true });
+
+// Auth functions - Các hàm xác thực
+const canEditPost = (post) => {
+  if (!authStore.isLoggedIn) return false;
+  if (authStore.userRole === 'admin') return true;
+  return post.authorId === authStore.user.id;
+};
+
+const canDeletePost = (post) => {
+  if (!authStore.isLoggedIn) return false;
+  if (authStore.userRole === 'admin') return true;
+  return post.authorId === authStore.user.id;
+};
+
+// API Functions - Các hàm gọi API
+
+/**
+ * Lấy danh sách bài viết từ API và cập nhật state local
+ * Sắp xếp bài viết theo ngày tạo (mới nhất trước)
+ */
+const fetchPosts = async () => {
   loading.value = true;
   error.value = "";
+  
   try {
     const res = await fetch("http://localhost:3000/posts");
     if (!res.ok) throw new Error("Không thể lấy danh sách bài viết!");
+    
     const data = await res.json();
     posts.value = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
-    // Initialize image indexes
+    // Khởi tạo index ảnh cho mỗi post
     posts.value.forEach(post => {
       if (post.images && post.images.length > 0) {
         postImageIndexes[post.id] = 0;
       }
     });
+
+    emit('posts-loaded', posts.value);
   } catch (err) {
     error.value = err.message;
+    console.error('Lỗi khi lấy bài viết:', err);
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
-}
+};
 
-async function fetchComments() {
+/**
+ * Lấy tất cả reactions từ API
+ * Cập nhật state reactions local
+ */
+const fetchReactions = async () => {
   try {
-    const res = await fetch('http://localhost:3000/comments');
-    comments.value = await res.json();
-  } catch (err) {
-    console.error('Error fetching comments:', err);
-  }
-}
-
-async function fetchCommentReactions() {
-  try {
-    const res = await fetch('http://localhost:3000/commentReactions');
-    commentReactions.value = await res.json();
-  } catch (err) {
-    console.error('Error fetching comment reactions:', err);
-  }
-}
-
-async function deletePost(id) {
-  if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
-  
-  deleting.value = id;
-  try {
-    const res = await fetch(`http://localhost:3000/posts/${id}`, {
-      method: 'DELETE'
-    });
+    const res = await fetch('http://localhost:3000/reactions');
     if (res.ok) {
-      posts.value = posts.value.filter(post => post.id !== id);
-      emit('reaction-updated');
+      reactions.value = await res.json();
     }
   } catch (err) {
-    error.value = err.message;
+    console.error('Lỗi khi lấy reactions:', err);
+    reactions.value = [];
   }
-  deleting.value = null;
-}
+};
 
-function viewPost(post) {
-  selectedPost.value = post;
-  showPostDetail.value = true;
-}
+/**
+ * Lấy tất cả comments từ API
+ * Cập nhật state comments local
+ */
+const fetchComments = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/comments');
+    if (res.ok) {
+      comments.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Lỗi khi lấy comments:', err);
+    comments.value = [];
+  }
+};
 
-// Image handling functions
-function getMainImage(post) {
+/**
+ * Lấy tất cả comment reactions từ API
+ * Cập nhật state comment reactions local
+ */
+const fetchCommentReactions = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/commentReactions');
+    if (res.ok) {
+      commentReactions.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Lỗi khi lấy comment reactions:', err);
+    commentReactions.value = [];
+  }
+};
+
+/**
+ * Lấy danh sách users từ API để hiển thị tên tác giả
+ */
+const fetchUsers = async () => {
+  try {
+    const res = await fetch('http://localhost:3000/users');
+    if (res.ok) {
+      users.value = await res.json();
+    }
+  } catch (err) {
+    console.error('Lỗi khi lấy users:', err);
+    users.value = [];
+  }
+};
+
+/**
+ * Xóa bài viết và tất cả dữ liệu liên quan với xác nhận từ người dùng
+ * Thực hiện xóa cascade để duy trì tính toàn vẹn dữ liệu
+ * @param {string} id - ID của bài viết cần xóa
+ */
+const deletePost = async (id) => {
+  // Bước 1: Lấy xác nhận từ người dùng với cảnh báo chi tiết
+  const confirmMessage = 'Bạn có chắc chắn muốn xóa bài viết này?\n\n' +
+                        'Hành động này sẽ xóa:\n' +
+                        '• Bài viết\n' +
+                        '• Tất cả bình luận và phản hồi\n' +
+                        '• Tất cả lượt thích/không thích\n\n' +
+                        'Không thể hoàn tác!';
+  
+  if (!confirm(confirmMessage)) return;
+  
+  // Bước 2: Hiển thị trạng thái loading
+  const originalError = error.value;
+  error.value = '';
+  
+  try {
+    // Bước 3: Thực hiện thao tác xóa cascade
+    const result = await deleteCascade(id);
+    
+    if (!result.success) {
+      throw new Error(result.error);
+    }
+    
+    // Bước 4: Cập nhật state local để phản ánh thay đổi ngay lập tức
+    const deletedCommentIds = comments.value
+      .filter(c => c.postId === id)
+      .map(c => c.id);
+    
+    updateLocalStateAfterDelete(id, deletedCommentIds, {
+      posts,
+      reactions,
+      comments,
+      commentReactions
+    });
+    
+    // Bước 5: Emit events để thông báo cho parent components
+    emit('reaction-updated');
+    
+    // Bước 6: Ghi log thành công với thống kê xóa
+    console.log(`✅ Xóa thành công bài viết ${id}:`, {
+      reactions: result.deletedCounts.reactions,
+      comments: result.deletedCounts.comments,
+      commentReactions: result.deletedCounts.commentReactions
+    });
+    
+    // Bước 7: Hiển thị phản hồi thành công cho người dùng
+    const message = `Đã xóa bài viết cùng với ${result.deletedCounts.comments} bình luận ` +
+                   `và ${result.deletedCounts.reactions} lượt đánh giá`;
+    console.info(message);
+    
+  } catch (err) {
+    // Bước 8: Xử lý lỗi một cách graceful
+    console.error('❌ Lỗi khi xóa bài viết:', err);
+    error.value = err.message || 'Có lỗi xảy ra khi xóa bài viết';
+    
+    // Hiển thị thông báo lỗi thân thiện với người dùng
+    alert('Không thể xóa bài viết. Vui lòng thử lại sau.');
+  }
+};
+
+// Event handlers - Xử lý sự kiện
+
+/**
+ * Xử lý cập nhật reactions từ các component con
+ * Làm mới dữ liệu reaction và thông báo cho parent
+ */
+const handleReactionUpdated = () => {
+  fetchReactions();
+  emit('reaction-updated');
+};
+
+/**
+ * Xử lý xem chi tiết bài viết
+ * @param {Object} post - Bài viết cần xem
+ */
+const viewPost = (post) => {
+  emit('view-post', post);
+};
+
+// Image handling functions - Các hàm xử lý hình ảnh
+
+/**
+ * Lấy hình ảnh chính của bài viết
+ * @param {Object} post - Bài viết
+ * @returns {string} URL hình ảnh chính
+ */
+const getMainImage = (post) => {
   if (!post.images || post.images.length === 0) return '';
   const currentIndex = postImageIndexes[post.id] || 0;
   return post.images[currentIndex]?.url || post.images[0]?.url;
-}
+};
 
-function getCurrentImageIndex(post) {
+/**
+ * Lấy chỉ số hình ảnh hiện tại của bài viết
+ * @param {Object} post - Bài viết
+ * @returns {number} Chỉ số hình ảnh hiện tại
+ */
+const getCurrentImageIndex = (post) => {
   return postImageIndexes[post.id] || 0;
-}
+};
 
-function setMainImage(post, index) {
+/**
+ * Đặt hình ảnh chính cho bài viết
+ * @param {Object} post - Bài viết
+ * @param {number} index - Chỉ số hình ảnh
+ */
+const setMainImage = (post, index) => {
   postImageIndexes[post.id] = index;
-}
+};
 
-function changeMainImage(post, direction) {
+/**
+ * Thay đổi hình ảnh chính theo hướng
+ * @param {Object} post - Bài viết
+ * @param {number} direction - Hướng thay đổi (-1: trước, 1: sau)
+ */
+const changeMainImage = (post, direction) => {
   const currentIndex = postImageIndexes[post.id] || 0;
   const newIndex = currentIndex + direction;
   
   if (newIndex >= 0 && newIndex < post.images.length) {
     postImageIndexes[post.id] = newIndex;
   }
-}
+};
 
-function openImageModal(images, startIndex = 0) {
+/**
+ * Mở modal xem hình ảnh
+ * @param {Array} images - Mảng hình ảnh
+ * @param {number} startIndex - Chỉ số bắt đầu
+ */
+const openImageModal = (images, startIndex = 0) => {
   modalImages.value = images;
   currentModalIndex.value = startIndex;
   showImageModal.value = true;
   document.body.style.overflow = 'hidden';
-}
+};
 
-function closeImageModal() {
+/**
+ * Đóng modal xem hình ảnh
+ */
+const closeImageModal = () => {
   showImageModal.value = false;
   modalImages.value = [];
   currentModalIndex.value = 0;
   document.body.style.overflow = 'auto';
-}
+};
 
-function changeModalImage(direction) {
+/**
+ * Thay đổi hình ảnh trong modal
+ * @param {number} direction - Hướng thay đổi
+ */
+const changeModalImage = (direction) => {
   const newIndex = currentModalIndex.value + direction;
   if (newIndex >= 0 && newIndex < modalImages.value.length) {
     currentModalIndex.value = newIndex;
   }
-}
+};
 
-// Comments functions
-function getPostComments(postId) {
+// Stats functions - Các hàm thống kê
+
+/**
+ * Tính số lượng likes cho một bài viết cụ thể
+ * @param {string} postId - ID của bài viết
+ * @returns {number} Số lượng likes
+ */
+const getPostLikes = (postId) => {
+  return reactions.value.filter(r => r.postId === postId && r.type === 'like').length;
+};
+
+/**
+ * Tính số lượng dislikes cho một bài viết cụ thể
+ * @param {string} postId - ID của bài viết
+ * @returns {number} Số lượng dislikes
+ */
+const getPostDislikes = (postId) => {
+  return reactions.value.filter(r => r.postId === postId && r.type === 'dislike').length;
+};
+
+/**
+ * Lấy tất cả comments cho một bài viết cụ thể
+ * @param {string} postId - ID của bài viết
+ * @returns {Array} Mảng comments của bài viết
+ */
+const getPostComments = (postId) => {
   return comments.value.filter(c => c.postId === postId);
-}
+};
 
-async function handleSubmitComment(commentData) {
+// Comment functions - Các hàm xử lý bình luận
+
+/**
+ * Xử lý submit comment mới
+ * Tạo comment mới và gửi lên server
+ * @param {Object} commentData - Dữ liệu comment
+ */
+const handleSubmitComment = async (commentData) => {
   try {
     const comment = {
       id: Date.now().toString(),
       postId: commentData.postId,
-      authorId: currentUser.value.id,
+      authorId: authStore.user.id,
+      authorName: authStore.user.fullName,
       content: commentData.content,
       parentId: commentData.parentId,
       createdAt: new Date().toISOString()
@@ -402,13 +652,19 @@ async function handleSubmitComment(commentData) {
 
     if (response.ok) {
       comments.value.push(comment);
+      // Stats sẽ tự động update qua watcher
     }
   } catch (error) {
-    console.error('Error submitting comment:', error);
+    console.error('Lỗi khi gửi comment:', error);
   }
-}
+};
 
-async function handleDeleteComment(commentId) {
+/**
+ * Xử lý xóa comment
+ * Xóa comment khỏi server và cập nhật state local
+ * @param {string} commentId - ID của comment cần xóa
+ */
+const handleDeleteComment = async (commentId) => {
   if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
   
   try {
@@ -417,29 +673,41 @@ async function handleDeleteComment(commentId) {
     });
     if (res.ok) {
       comments.value = comments.value.filter(c => c.id !== commentId);
+      // Stats sẽ tự động update qua watcher
     }
   } catch (err) {
-    console.error('Error deleting comment:', err);
+    console.error('Lỗi khi xóa comment:', err);
   }
-}
+};
 
-async function handleSubmitReply(replyData) {
+/**
+ * Xử lý submit reply cho comment
+ * @param {Object} replyData - Dữ liệu reply
+ */
+const handleSubmitReply = async (replyData) => {
   await handleSubmitComment(replyData);
-}
+};
 
-async function handleToggleCommentReaction({ commentId, type }) {
+/**
+ * Xử lý toggle reaction cho comment
+ * Thêm, xóa hoặc thay đổi reaction cho comment
+ * @param {Object} data - Object chứa commentId và type
+ */
+const handleToggleCommentReaction = async ({ commentId, type }) => {
   try {
     const existingReaction = commentReactions.value.find(
-      r => r.commentId === commentId && r.userId === currentUser.value.id
+      r => r.commentId === commentId && r.userId === authStore.user.id
     );
 
     if (existingReaction) {
       if (existingReaction.type === type) {
+        // Xóa reaction nếu cùng loại
         await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
           method: 'DELETE'
         });
         commentReactions.value = commentReactions.value.filter(r => r.id !== existingReaction.id);
       } else {
+        // Cập nhật reaction nếu khác loại
         existingReaction.type = type;
         await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
           method: 'PATCH',
@@ -448,10 +716,11 @@ async function handleToggleCommentReaction({ commentId, type }) {
         });
       }
     } else {
+      // Tạo reaction mới
       const reaction = {
         id: Date.now().toString(),
         commentId,
-        userId: currentUser.value.id,
+        userId: authStore.user.id,
         type,
         createdAt: new Date().toISOString()
       };
@@ -465,16 +734,38 @@ async function handleToggleCommentReaction({ commentId, type }) {
       commentReactions.value.push(reaction);
     }
   } catch (error) {
-    console.error('Error toggling comment reaction:', error);
+    console.error('Lỗi khi toggle comment reaction:', error);
   }
-}
+};
 
-function getAuthorName(authorId) {
-  const authors = { 1: 'Admin', 2: 'HungVu' };
-  return authors[authorId] || 'Unknown';
-}
+// Utility functions - Các hàm tiện ích
 
-function formatDate(dateString) {
+/**
+ * Lấy tên tác giả từ danh sách users hoặc authStore
+ * @param {string} authorId - ID của tác giả
+ * @returns {string} Tên tác giả
+ */
+const getAuthorName = (authorId) => {
+  // Tìm trong danh sách users đã fetch
+  const user = users.value.find(u => u.id === authorId);
+  if (user) {
+    return user.fullName || user.username;
+  }
+  
+  // Fallback cho current user
+  if (authStore.user && authStore.user.id === authorId) {
+    return authStore.user.fullName || authStore.user.username;
+  }
+  
+  return 'Unknown User';
+};
+
+/**
+ * Định dạng ngày tháng theo locale Việt Nam
+ * @param {string} dateString - Chuỗi ngày tháng
+ * @returns {string} Ngày tháng đã định dạng
+ */
+const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString("vi-VN", {
     year: "numeric",
     month: "2-digit", 
@@ -482,28 +773,67 @@ function formatDate(dateString) {
     hour: "2-digit",
     minute: "2-digit"
   });
-}
+};
 
-function truncateContent(content, maxLength = 200) {
+/**
+ * Cắt ngắn nội dung để hiển thị preview
+ * @param {string} content - Nội dung cần cắt
+ * @param {number} maxLength - Độ dài tối đa
+ * @returns {string} Nội dung đã cắt ngắn
+ */
+const truncateContent = (content, maxLength = 200) => {
   const textContent = content.replace(/<[^>]*>/g, '');
   return textContent.length > maxLength 
     ? textContent.substring(0, maxLength) + '...' 
     : textContent;
-}
+};
 
-async function loadAllData() {
-  await Promise.all([
-    fetchPosts(),
-    fetchComments(),
-    fetchCommentReactions()
-  ]);
-}
+/**
+ * Lấy tiêu đề cho trạng thái empty
+ * @returns {string} Tiêu đề empty state
+ */
+const getEmptyStateTitle = () => {
+  if (props.activeTab === 'my') {
+    return 'Bạn chưa có bài viết nào';
+  }
+  return 'Chưa có bài viết nào';
+};
 
-onMounted(loadAllData);
-watch(() => props.reload, loadAllData);
+/**
+ * Lấy thông điệp cho trạng thái empty
+ * @returns {string} Thông điệp empty state
+ */
+const getEmptyStateMessage = () => {
+  if (props.activeTab === 'my') {
+    return 'Hãy tạo bài viết đầu tiên của bạn!';
+  }
+  return 'Hãy tạo bài viết đầu tiên!';
+};
 
-// Keyboard navigation for modal
+/**
+ * Tải tất cả dữ liệu cần thiết cho danh sách bài viết
+ * Lấy posts, reactions, comments, comment reactions và users đồng thời
+ */
+const loadAllData = async () => {
+  try {
+    await Promise.all([
+      fetchPosts(),
+      fetchReactions(),
+      fetchComments(),
+      fetchCommentReactions(),
+      fetchUsers() // Thêm fetch users
+    ]);
+  } catch (error) {
+    console.error('Lỗi khi tải dữ liệu:', error);
+    error.value = 'Không thể tải dữ liệu';
+  }
+};
+
+// Lifecycle hooks - Các hook vòng đời
 onMounted(() => {
+  loadAllData();
+  
+  // Xử lý phím tắt cho modal hình ảnh
   document.addEventListener('keydown', (e) => {
     if (showImageModal.value) {
       if (e.key === 'Escape') {
@@ -516,9 +846,16 @@ onMounted(() => {
     }
   });
 });
+
+// Watchers - Các watcher
+watch(() => props.reload, loadAllData);
 </script>
 
 <style scoped>
+.posts-container {
+  width: 100%;
+}
+
 .post-card {
   transition: all 0.3s ease;
   border-radius: 12px;
@@ -664,6 +1001,11 @@ onMounted(() => {
   color: #721c24 !important;
 }
 
+.badge {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.6rem;
+}
+
 @media (max-width: 768px) {
   .main-image {
     height: 250px;
@@ -686,6 +1028,11 @@ onMounted(() => {
   .thumbnail {
     width: 50px;
     height: 50px;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.5rem;
   }
 }
 </style>

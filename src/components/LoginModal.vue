@@ -1,69 +1,160 @@
 <template>
-  <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5)">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Đăng nhập</h5>
-          <button type="button" class="btn-close" @click="$emit('close')"></button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="handleLogin">
-            <div class="mb-3">
-              <label class="form-label">Tên đăng nhập</label>
-              <input 
-                v-model="username" 
-                type="text" 
-                class="form-control" 
-                placeholder="Nhập username (admin hoặc user)"
-                required
-              >
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Mật khẩu</label>
-              <input 
-                v-model="password" 
-                type="password" 
-                class="form-control" 
-                placeholder="Nhập mật khẩu"
-                required
-              >
-            </div>
-            <div class="text-muted small mb-3">
-              <strong>Demo accounts:</strong><br>
-              Admin: username="admin", password="admin"<br>
-              User: username="user", password="user"
-            </div>
-            <button type="submit" class="btn btn-primary w-100" :disabled="loading">
-              <span v-if="loading" class="spinner-border spinner-border-sm me-2"></span>
-              Đăng nhập
-            </button>
-          </form>
-        </div>
-      </div>
+  <!-- Modal Overlay -->
+  <div 
+    v-if="show" 
+    class="modal-overlay" 
+    @click="closeModal"
+  >
+    <div class="modal-container" @click.stop>
+      <!-- Close button -->
+      <button 
+        class="modal-close" 
+        @click="closeModal"
+        aria-label="Đóng"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+
+      <!-- Login Component -->
+      <Login 
+        @login-success="handleLoginSuccess"
+        @register-success="handleRegisterSuccess"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useAuth } from '@/composables/auth';
+import { watch } from 'vue';
+import Login from '@/views/Login.vue';
 
-const emit = defineEmits(['close', 'login-success']);
-
-const { login } = useAuth();
-
-const username = ref('');
-const password = ref('');
-const loading = ref(false);
-
-async function handleLogin() {
-  loading.value = true;
-  try {
-    await login({ username: username.value, password: password.value });
-    emit('login-success');
-  } catch (error) {
-    alert('Đăng nhập thất bại!');
+const props = defineProps({
+  show: {
+    type: Boolean,
+    default: false
   }
-  loading.value = false;
-}
+});
+
+const emit = defineEmits(['close', 'login-success', 'register-success']);
+
+// Watch for show prop changes to handle body scroll
+watch(() => props.show, (newValue) => {
+  if (newValue) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+});
+
+const closeModal = () => {
+  emit('close');
+};
+
+const handleLoginSuccess = (userData) => {
+  emit('login-success', userData);
+};
+
+const handleRegisterSuccess = (userData) => {
+  emit('register-success', userData);
+};
+
+// Handle escape key
+const handleEscape = (event) => {
+  if (event.key === 'Escape' && props.show) {
+    closeModal();
+  }
+};
+
+// Add/remove event listeners
+watch(() => props.show, (newValue) => {
+  if (newValue) {
+    document.addEventListener('keydown', handleEscape);
+  } else {
+    document.removeEventListener('keydown', handleEscape);
+  }
+});
 </script>
+
+<style scoped>
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+  backdrop-filter: blur(4px);
+}
+
+.modal-container {
+  position: relative;
+  max-width: 95vw;
+  max-height: 95vh;
+  overflow-y: auto;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.1);
+}
+
+.modal-close i {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0.5rem;
+  }
+  
+  .modal-container {
+    max-width: 100vw;
+    border-radius: 15px;
+  }
+  
+  .modal-close {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 35px;
+    height: 35px;
+  }
+}
+</style>

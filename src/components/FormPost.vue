@@ -114,11 +114,13 @@
         </div>
       </div>
 
-      <!-- Content Editor -->
+      <!-- Content Editor - ✅ SỬA ĐỔI -->
       <div class="mb-4">
-        <label class="form-label fw-semibold"> Nội dung bài viết </label>
+        <label class="form-label fw-semibold">
+          <i class="fas fa-edit me-2 text-primary"></i>Nội dung bài viết
+        </label>
         <div class="border rounded">
-          <Ckeditor
+          <ckeditor
             :editor="editor"
             v-model="content"
             :config="editorConfig"
@@ -142,7 +144,7 @@
           class="btn btn-outline-secondary me-md-2"
           @click="resetForm"
         >
-          Làm mới
+          Làm mới
         </button>
         <button
           :disabled="isSubmitting"
@@ -175,7 +177,15 @@
 
 <script setup>
 import { ref, watch } from "vue";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import { useRouter } from 'vue-router';
+import { authStore } from '@/store/auth';
+
+// ✅ SỬA ĐỔI: Import CKEditor 5 mới
+import { ClassicEditor, Essentials, Paragraph, Bold, Italic, Link, List, BlockQuote, Table, Undo } from 'ckeditor5';
+import { Ckeditor } from '@ckeditor/ckeditor5-vue';
+import 'ckeditor5/ckeditor5.css';
+
+const router = useRouter();
 
 const title = ref("");
 const content = ref("");
@@ -198,25 +208,17 @@ const props = defineProps({
 
 const emit = defineEmits(["post-success", "cancel-edit"]);
 
+// ✅ SỬA ĐỔI: CKEditor config mới
 const editorConfig = {
-  language: "vi",
-  licenseKey: "GPL",
+  plugins: [Essentials, Paragraph, Bold, Italic, Link, List, BlockQuote, Table, Undo],
   toolbar: [
-    "heading",
-    "|",
-    "bold",
-    "italic",
-    "link",
-    "|",
-    "bulletedList",
-    "numberedList",
-    "|",
-    "blockQuote",
-    "insertTable",
-    "|",
-    "undo",
-    "redo",
+    'bold', 'italic', 'link', '|',
+    'bulletedList', 'numberedList', '|',
+    'blockQuote', 'insertTable', '|',
+    'undo', 'redo'
   ],
+  language: 'vi',
+  licenseKey: 'GPL',
 };
 
 // Watch for edit post prop changes
@@ -263,7 +265,6 @@ function processFiles(files) {
   files.forEach((file) => {
     if (file.type.startsWith("image/")) {
       if (file.size <= 5 * 1024 * 1024) {
-        // 5MB limit
         const reader = new FileReader();
         reader.onload = (e) => {
           selectedImages.value.push({
@@ -286,7 +287,6 @@ function removeImage(index) {
   const wasMain = selectedImages.value[index].isMain;
   selectedImages.value.splice(index, 1);
 
-  // Set new main image if removed image was main
   if (wasMain && selectedImages.value.length > 0) {
     selectedImages.value[0].isMain = true;
   }
@@ -306,13 +306,11 @@ async function uploadImages() {
     const imageData = selectedImages.value[i];
 
     if (imageData.uploaded) {
-      // Already uploaded (editing mode)
       uploadedImages.push({
         url: imageData.url,
         isMain: imageData.isMain,
       });
     } else {
-      // New image to upload
       try {
         const formData = new FormData();
         formData.append("image", imageData.file);
@@ -333,7 +331,6 @@ async function uploadImages() {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        // For demo, use base64 data URL
         uploadedImages.push({
           url: imageData.preview,
           isMain: imageData.isMain,
@@ -364,7 +361,6 @@ const handleSubmit = async () => {
   isSubmitting.value = true;
 
   try {
-    // Upload images first
     const uploadedImages =
       selectedImages.value.length > 0 ? await uploadImages() : [];
 
@@ -376,7 +372,9 @@ const handleSubmit = async () => {
         uploadedImages.find((img) => img.isMain)?.url ||
         uploadedImages[0]?.url ||
         "",
-      authorId: 2,
+      // ✅ SỬA ĐỔI: Sử dụng authStore
+      authorId: authStore.user?.id || 2,
+      authorName: authStore.user?.fullName || 'Ẩn danh',
       createdAt: isEditing.value
         ? props.editPost.createdAt
         : new Date().toISOString(),
@@ -406,7 +404,13 @@ const handleSubmit = async () => {
         : "Đăng bài thành công!";
       success.value = true;
       resetForm();
-      setTimeout(() => (message.value = ""), 3000);
+      setTimeout(() => {
+        message.value = "";
+        // ✅ THÊM: Redirect về blog sau khi thành công
+        if (!isEditing.value) {
+          router.push('/blog');
+        }
+      }, 2000);
     } else {
       throw new Error("Failed to save post");
     }
@@ -436,6 +440,7 @@ const cancelEdit = () => {
 </script>
 
 <style scoped>
+/* CSS giữ nguyên như code gốc */
 .form-container {
   padding: 1rem;
 }
