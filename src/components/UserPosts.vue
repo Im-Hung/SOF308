@@ -220,7 +220,7 @@ const postImageIndexes = reactive({});
 async function fetchUserPosts() {
   try {
     const res = await fetch(
-      `http://localhost:3000/posts?authorId=${props.userId}`
+      `https://sof308-json-server-production.up.railway.app/posts?authorId=${props.userId}`
     );
     const data = await res.json();
     userPosts.value = data.sort(
@@ -240,7 +240,7 @@ async function fetchUserPosts() {
 
 async function fetchReactions() {
   try {
-    const res = await fetch("http://localhost:3000/reactions");
+    const res = await fetch("https://sof308-json-server-production.up.railway.app/reactions");
     reactions.value = await res.json();
   } catch (err) {
     console.error("Error fetching reactions:", err);
@@ -249,7 +249,7 @@ async function fetchReactions() {
 
 async function fetchComments() {
   try {
-    const res = await fetch("http://localhost:3000/comments");
+    const res = await fetch("https://sof308-json-server-production.up.railway.app/comments");
     comments.value = await res.json();
   } catch (err) {
     console.error("Error fetching comments:", err);
@@ -260,7 +260,7 @@ async function deletePost(id) {
   if (!confirm("Bạn có chắc chắn muốn xóa bài viết này?")) return;
 
   try {
-    const res = await fetch(`http://localhost:3000/posts/${id}`, {
+    const res = await fetch(`https://sof308-json-server-production.up.railway.app/posts/${id}`, {
       method: "DELETE",
     });
     if (res.ok) {

@@ -66,7 +66,7 @@ onMounted(() => {
 async function fetchReactions() {
   try {
     const response = await fetch(
-      `http://localhost:3000/reactions?postId=${props.postId}`
+      `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}`
     );
     if (!response.ok) throw new Error("Failed to fetch reactions");
 
@@ -87,7 +87,7 @@ async function fetchUserReaction() {
 
   try {
     const response = await fetch(
-      `http://localhost:3000/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+      `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
     );
     if (!response.ok) throw new Error("Failed to fetch user reaction");
 
@@ -199,7 +199,7 @@ async function createReaction(type) {
     createdAt: new Date().toISOString(),
   };
 
-  const response = await fetch("http://localhost:3000/reactions", {
+  const response = await fetch("https://sof308-json-server-production.up.railway.app/reactions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(reaction),
@@ -215,7 +215,7 @@ async function createReaction(type) {
 
 async function updateReaction(type) {
   const response = await fetch(
-    `http://localhost:3000/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+    `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
   );
   if (!response.ok) throw new Error("Failed to fetch existing reaction");
 
@@ -224,7 +224,7 @@ async function updateReaction(type) {
   if (reactions.length > 0) {
     const reactionId = reactions[0].id;
     const updateResponse = await fetch(
-      `http://localhost:3000/reactions/${reactionId}`,
+      `https://sof308-json-server-production.up.railway.app/reactions/${reactionId}`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -248,7 +248,7 @@ async function updateReaction(type) {
 
 async function removeReaction() {
   const response = await fetch(
-    `http://localhost:3000/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
+    `https://sof308-json-server-production.up.railway.app/reactions?postId=${props.postId}&userId=${currentUser.value.id}`
   );
   if (!response.ok) throw new Error("Failed to fetch existing reaction");
 
@@ -257,7 +257,7 @@ async function removeReaction() {
   if (reactions.length > 0) {
     const reactionId = reactions[0].id;
     const deleteResponse = await fetch(
-      `http://localhost:3000/reactions/${reactionId}`,
+      `https://sof308-json-server-production.up.railway.app/reactions/${reactionId}`,
       {
         method: "DELETE",
       }

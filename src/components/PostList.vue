@@ -275,7 +275,7 @@ async function fetchPosts() {
   loading.value = true;
   error.value = "";
   try {
-    const res = await fetch("http://localhost:3000/posts");
+    const res = await fetch("https://sof308-json-server-production.up.railway.app/posts");
     if (!res.ok) throw new Error("Không thể lấy danh sách bài viết!");
     const data = await res.json();
     posts.value = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -294,7 +294,7 @@ async function fetchPosts() {
 
 async function fetchComments() {
   try {
-    const res = await fetch('http://localhost:3000/comments');
+    const res = await fetch('https://sof308-json-server-production.up.railway.app/comments');
     comments.value = await res.json();
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -303,7 +303,7 @@ async function fetchComments() {
 
 async function fetchCommentReactions() {
   try {
-    const res = await fetch('http://localhost:3000/commentReactions');
+    const res = await fetch('https://sof308-json-server-production.up.railway.app/commentReactions');
     commentReactions.value = await res.json();
   } catch (err) {
     console.error('Error fetching comment reactions:', err);
@@ -315,7 +315,7 @@ async function deletePost(id) {
   
   deleting.value = id;
   try {
-    const res = await fetch(`http://localhost:3000/posts/${id}`, {
+    const res = await fetch(`https://sof308-json-server-production.up.railway.app/posts/${id}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -394,7 +394,7 @@ async function handleSubmitComment(commentData) {
       createdAt: new Date().toISOString()
     };
 
-    const response = await fetch('http://localhost:3000/comments', {
+    const response = await fetch('https://sof308-json-server-production.up.railway.app/comments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(comment)
@@ -412,7 +412,7 @@ async function handleDeleteComment(commentId) {
   if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
   
   try {
-    const res = await fetch(`http://localhost:3000/comments/${commentId}`, {
+    const res = await fetch(`https://sof308-json-server-production.up.railway.app/comments/${commentId}`, {
       method: 'DELETE'
     });
     if (res.ok) {
@@ -435,13 +435,13 @@ async function handleToggleCommentReaction({ commentId, type }) {
 
     if (existingReaction) {
       if (existingReaction.type === type) {
-        await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
+        await fetch(`https://sof308-json-server-production.up.railway.app/commentReactions/${existingReaction.id}`, {
           method: 'DELETE'
         });
         commentReactions.value = commentReactions.value.filter(r => r.id !== existingReaction.id);
       } else {
         existingReaction.type = type;
-        await fetch(`http://localhost:3000/commentReactions/${existingReaction.id}`, {
+        await fetch(`https://sof308-json-server-production.up.railway.app/commentReactions/${existingReaction.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ type })
@@ -456,7 +456,7 @@ async function handleToggleCommentReaction({ commentId, type }) {
         createdAt: new Date().toISOString()
       };
 
-      await fetch('http://localhost:3000/commentReactions', {
+      await fetch('https://sof308-json-server-production.up.railway.app/commentReactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reaction)

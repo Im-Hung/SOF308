@@ -50,33 +50,22 @@
 
       <!-- Avatar Dropdown -->
       <div class="dropdown">
-        <a
-          class="d-flex align-items-center text-decoration-none dropdown-toggle"
-          href="#"
-          id="dropdownUser"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-          <img
-            src="https://i.pravatar.cc/40?img=3"
-            alt="avatar"
-            class="rounded-circle me-2"
-            width="40"
-            height="40"
-          />
-          <span class="d-none d-md-inline fw-semibold text-dark">Toàn</span>
+        <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="dropdownUser"
+          data-bs-toggle="dropdown" aria-expanded="false">
+          <img :src="profile.avatar" alt="avatar" class="rounded-circle me-2" width="40" height="40" />
+          <span class="d-none d-md-inline fw-semibold text-dark">{{ profile.fullName }}</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" style="overflow: hidden">
           <li><router-link class="dropdown-item" to="/profile">Trang cá nhân</router-link></li>
           <li><router-link class="dropdown-item" to="/my-posts">Bài viết của tôi</router-link></li>
-          <li><hr class="dropdown-divider" /></li>
+          <li>
+            <hr class="dropdown-divider" />
+          </li>
           <li>
             <a class="dropdown-item text-danger" href="#" @click.prevent="logout">Đăng xuất</a>
           </li>
           <li>
-            <router-link class="dropdown-item text-danger" to="/admin"
-              >Chuyển sang Admin</router-link
-            >
+            <router-link class="dropdown-item text-danger" to="/admin">Chuyển sang Admin</router-link>
           </li>
         </ul>
       </div>
@@ -101,6 +90,7 @@ export default {
 * {
   z-index: 9999 !important;
 }
+
 .dropdown-menu {
   position: absolute !important;
   z-index: 9999 !important;
@@ -111,3 +101,29 @@ img.rounded-circle {
   object-fit: cover;
 }
 </style>
+
+<script setup>
+import { reactive, ref, onMounted } from 'vue'
+import api from '@/composables/api'
+
+const profile = reactive({
+  avatar: '',
+  fullName: '',
+})
+
+const isLoading = ref(true)
+let userId = null
+
+onMounted(async () => {
+  try {
+    const session = await api.get('/session')
+    userId = 2
+    const userRes = await api.get(`/users/${userId}`)
+    Object.assign(profile, userRes.data)
+  } catch (err) {
+    console.error('Load profile error', err)
+  } finally {
+    isLoading.value = false
+  }
+})
+</script>

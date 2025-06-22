@@ -317,7 +317,7 @@ async function uploadImages() {
         const formData = new FormData();
         formData.append("image", imageData.file);
 
-        const response = await fetch("http://localhost:3000/upload", {
+        const response = await fetch("https://sof308-json-server-production.up.railway.app/upload", {
           method: "POST",
           body: formData,
         });
@@ -388,8 +388,8 @@ const handleSubmit = async () => {
     }
 
     const url = isEditing.value
-      ? `http://localhost:3000/posts/${editingPostId.value}`
-      : "http://localhost:3000/posts";
+      ? `https://sof308-json-server-production.up.railway.app/posts/${editingPostId.value}`
+      : "https://sof308-json-server-production.up.railway.app/posts";
 
     const method = isEditing.value ? "PUT" : "POST";
 
